@@ -1,0 +1,42 @@
+{
+    "brands": {
+        "Access": true,
+        "Akai": true,
+        "Alesis": true,
+        "Arturia": true,
+        "Casio": true,
+        "Crumar": true,
+        "E-mu": true,
+        "Elektron": true,
+        "Emu": true,
+        "Ensoniq": true,
+        "Hohner": true,
+        "Kawai": true,
+        "Kaway": true,
+        "Korg": true,
+        "Kurzweil": true,
+        "Moog": true,
+        "Nord": true,
+        "Novation": true,
+        "Oberheim": true,
+        "Quasimidi": true,
+        "Roland": true,
+        "Sequential": true,
+        "Simmons": true,
+        "Vermona": true,
+        "Waldorf": true,
+        "Yamaha": true
+    },
+    "models": {
+        "Alesis Andromeda A6": true,
+        "Korg M1": true,
+        "Korg MS-20": true,
+        "Korg Polysix": true,
+        "Moog Minimoog Model D": true,
+        "Roland Juno-106": true,
+        "Roland Jupiter-8": true,
+        "Sequential Prophet": true,
+        "Yamaha CS-80": true,
+        "Yamaha DX7": true
+    }
+}

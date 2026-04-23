@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+data.json
+status.json
+refresh.flag
+*.log
+ebay_dom.html
+test_*.py
+debug_*.py
+.DS_Store

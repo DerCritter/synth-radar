@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synth Arbitrage Radar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.4">
+    <!-- Lucide for cool icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="glow-bg glow-bg-1"></div>
+    <div class="glow-bg glow-bg-2"></div>
+    
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i data-lucide="filter"></i>
+                <h2>Quick Filters</h2>
+            </div>
+            <p class="sidebar-desc">Filter the results by brand.</p>
+            <div class="filter-actions">
+                <button id="select-all-btn" class="btn-text">Select All</button>
+                <span class="divider">|</span>
+                <button id="clear-all-btn" class="btn-text">Clear All</button>
+            </div>
+            <div class="filter-list" id="filter-list">
+                <div class="loading-filters">Loading...</div>
+            </div>
+
+            <div class="sidebar-header" style="margin-top: 2rem;">
+                <i data-lucide="layers"></i>
+                <h2>Platforms</h2>
+            </div>
+            <div class="filter-list" id="platform-filter-list">
+                <label class="filter-item">
+                    <input type="checkbox" class="filter-cb platform-cb" data-platform="Kleinanzeigen" checked>
+                    <span class="filter-name">Kleinanzeigen</span>
+                    <div class="checkbox-indicator"></div>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox" class="filter-cb platform-cb" data-platform="eBay" checked>
+                    <span class="filter-name">eBay</span>
+                    <div class="checkbox-indicator"></div>
+                </label>
+            </div>
+
+            <div class="sidebar-header" style="margin-top: 2.5rem;">
+                <i data-lucide="euro"></i>
+                <h2>Max Price Listing</h2>
+            </div>
+            <div class="price-slider-container">
+                <div class="price-display">
+                    Up to: <span id="max-price-display">€5000</span>
+                </div>
+                <input type="range" id="price-slider" class="range-slider" min="0" max="10000" step="100" value="5000">
+            </div>
+
+            <div class="sidebar-header" style="margin-top: 2rem;">
+                <i data-lucide="arrow-up-down"></i>
+                <h2>Sorting</h2>
+            </div>
+            <div class="sort-container">
+                <select id="price-sort" class="select-input">
+                    <option value="price-asc" selected>Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="save-desc">🔥 Mayor Ahorro (Hot Deals)</option>
+                </select>
+            </div>
+        </aside>
+
+        <main class="dashboard">
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <i data-lucide="activity"></i>
+                    <h1>SynthRadar</h1>
+                </div>
+                <p class="subtitle">Arbitrage Opportunities Hub</p>
+            </div>
+            
+            <div class="header-right">
+                <div class="stat-badge">
+                    <span class="pulse-dot"></span>
+                    <span id="last-update">Waiting for data...</span>
+                </div>
+                <button id="refresh-btn" class="icon-btn" title="Refresh Data">
+                    <i data-lucide="refresh-cw"></i>
+                </button>
+            </div>
+        </header>
+
+        <div class="progress-container" id="bot-progress-container" style="display: none;">
+            <div class="progress-info">
+                <span id="bot-status-text">Scanning market...</span>
+                <span id="bot-progress-percent">0%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="bot-progress-fill"></div>
+            </div>
+        </div>
+
+        <section class="overview">
+            <div class="metric-card">
+                <i data-lucide="target" class="metric-icon"></i>
+                <div class="metric-info">
+                    <h3>Active Opportunities</h3>
+                    <p id="total-opps">0</p>
+                </div>
+            </div>
+            <div class="metric-card">
+                <i data-lucide="trending-up" class="metric-icon"></i>
+                <div class="metric-info">
+                    <h3>Avg. Potential Margin</h3>
+                    <p id="avg-margin">0%</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="opportunities-grid" id="grid">
+            <!-- Cards will be injected here via JS -->
+            <div class="empty-state">
+                <i data-lucide="search" class="empty-icon"></i>
+                <p>No new opportunities detected in the latest scan.</p>
+                <span>The bot is running in the background.</span>
+            </div>
+        </section>
+        </main>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">Message Copied!</div>
+
+    <script>
+        lucide.createIcons();
+
+        const formatCurrency = (amount) => {
+            return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(amount);
+        };
+
+        const copyToClipboard = async (text, btnElement) => {
+            try {
+                await navigator.clipboard.writeText(text);
+                const toast = document.getElementById('toast');
+                toast.classList.add('show');
+                
+                // Visual feedback on button
+                const originalIcon = btnElement.innerHTML;
+                btnElement.innerHTML = '<i data-lucide="check"></i> Copied';
+                lucide.createIcons();
+                btnElement.classList.add('copied');
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    btnElement.innerHTML = originalIcon;
+                    lucide.createIcons();
+                    btnElement.classList.remove('copied');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy', err);
+            }
+        };
+
+        // NEW badge logic using localStorage and IntersectionObserver
+        let seenAds = JSON.parse(localStorage.getItem('seenAds')) || {};
+        const now = Date.now();
+        // Cleanup ads older than 7 days
+        for (let url in seenAds) {
+            if (now - seenAds[url] > 7 * 24 * 60 * 60 * 1000) {
+                delete seenAds[url];
+            }
+        }
+        localStorage.setItem('seenAds', JSON.stringify(seenAds));
+
+        const markAsSeen = (url, card) => {
+            if (!seenAds[url]) {
+                seenAds[url] = Date.now();
+                localStorage.setItem('seenAds', JSON.stringify(seenAds));
+                const badge = card.querySelector('.new-badge');
+                if (badge) {
+                    badge.style.opacity = '0';
+                    setTimeout(() => badge.remove(), 500);
+                }
+                card.classList.remove('is-new');
+            }
+        };
+
+        const createCard = (opp) => {
+            const card = document.createElement('div');
+            const savingsFloat = parseFloat(opp['Ahorro %'].replace('%', ''));
+            const isGreatDeal = savingsFloat >= 40;
+            const isNew = !seenAds[opp.Enlace];
+            
+            card.className = `opp-card ${isGreatDeal ? 'great-deal' : ''} ${isNew ? 'is-new' : ''}`;
+            card.setAttribute('data-url', opp.Enlace);
+            card.style.animation = 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards';
+            
+            const isDefekt = opp.Estado.includes('Defekt');
+            const stateClass = isDefekt ? 'state-defekt' : 'state-funcional';
+            const hasImage = opp.Imagen && opp.Imagen.trim() !== '';
+            
+            const platform = opp.Plataforma || 'Kleinanzeigen';
+            const platformClass = platform === 'eBay' ? 'badge-ebay' : 'badge-kleinanzeigen';
+            const platformIcon = platform === 'eBay' ? 'shopping-cart' : 'shopping-bag';
+            
+            card.innerHTML = `
+                ${isNew ? '<div class="new-badge">NEW</div>' : ''}
+                ${isGreatDeal ? '<div class="great-deal-badge"><i data-lucide="flame"></i>HOT DEAL</div>' : ''}
+                <div class="platform-badge ${platformClass}"><i data-lucide="${platformIcon}"></i>${platform}</div>
+                ${hasImage ? `<div class="card-image-wrap"><img class="card-image" src="${opp.Imagen}" alt="${opp.Modelo}" onerror="this.parentElement.style.display='none'"></div>` : ''}
+                
+                <div class="card-header">
+                    <div class="tags">
+                        <span class="tag ${stateClass}">${opp.Estado}</span>
+                        <span class="tag tag-save">${opp['Ahorro %']} Off</span>
+                        <span class="tag tag-date"><i data-lucide="clock"></i> ${opp['Fecha Agregado'] || 'Reciente'}</span>
+                    </div>
+                </div>
+                
+                <h2 class="model-name">${opp.Modelo}</h2>
+                
+                <div class="price-row">
+                    <div class="price-col">
+                        <span class="price-label">Listed Price</span>
+                        <span class="price-value highlight">€${opp['Precio URL']}</span>
+                    </div>
+                    <div class="price-vs"><i data-lucide="arrow-right"></i></div>
+                    <div class="price-col">
+                        <span class="price-label">Reverb Market</span>
+                        <span class="price-value">${opp['Precio Mercado']}</span>
+                    </div>
+                </div>
+
+                <div class="card-actions">
+                    <a href="${opp.Enlace}" target="_blank" class="btn btn-primary" title="Open in Kleinanzeigen">
+                        <i data-lucide="external-link"></i> View Ad
+                    </a>
+                    <a href="${opp.Reverb || '#'}" target="_blank" class="btn btn-reverb" title="See Reverb prices">
+                        <i data-lucide="bar-chart-2"></i> Reverb
+                    </a>
+                    <button class="btn btn-secondary copy-btn" data-draft="${encodeURIComponent(opp['Mensaje Borrador'])}">
+                        <i data-lucide="copy"></i> Draft
+                    </button>
+                </div>
+            `;
+            
+            // Attach listener specifically for this card's button
+            const copyBtn = card.querySelector('.copy-btn');
+            copyBtn.addEventListener('click', (e) => {
+                const draft = decodeURIComponent(e.currentTarget.getAttribute('data-draft'));
+                copyToClipboard(draft, copyBtn);
+            });
+            
+            if (isNew) {
+                // Remove the NEW badge when the user clicks anywhere on the card
+                card.addEventListener('click', () => markAsSeen(opp.Enlace, card), { once: true });
+            }
+            
+            return card;
+        };
+
+        // Config logic
+        let currentConfig = null;
+
+        const renderFilters = (config) => {
+            const container = document.getElementById('filter-list');
+            container.innerHTML = '';
+            
+            // Auto fallback for older format
+            const brands = config.brands || config.models || {};
+            if (!config.brands && config.models) {
+                config.brands = config.models; 
+            }
+            
+            Object.keys(brands).sort().forEach(brand => {
+                const label = document.createElement('label');
+                label.className = 'filter-item';
+                
+                label.innerHTML = `
+                    <input type="checkbox" class="filter-cb" data-model="${brand}" ${brands[brand] ? 'checked' : ''}>
+                    <span class="filter-name">${brand}</span>
+                    <div class="checkbox-indicator"></div>
+                `;
+                
+                label.querySelector('input').addEventListener('change', async (e) => {
+                    const isChecked = e.target.checked;
+                    currentConfig.brands[brand] = isChecked;
+                    
+                    try {
+                        await fetch('/api/config', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(currentConfig)
+                        });
+                        // Visual update
+                        const toast = document.getElementById('toast');
+                        toast.textContent = 'Configuration saved!';
+                        toast.classList.add('show');
+                        setTimeout(() => toast.classList.remove('show'), 2000);
+                        fetchData(); // re-filter immediately to show hiding/showing
+                    } catch(err) {
+                        console.error('Failed to save config', err);
+                    }
+                });
+                
+                container.appendChild(label);
+            });
+        };
+
+        const fetchConfig = async () => {
+            try {
+                const res = await fetch('/api/config');
+                const result = await res.json();
+                if (result.status === 'success') {
+                    currentConfig = result.config;
+                    renderFilters(currentConfig);
+                }
+            } catch (err) {
+                console.error("Error fetching config:", err);
+            }
+        };
+
+        const fetchData = async () => {
+            const btn = document.getElementById('refresh-btn');
+            btn.classList.add('spin');
+            
+            // Get slider value
+            const maxPriceStr = document.getElementById('price-slider').value;
+            const maxPrice = parseFloat(maxPriceStr);
+            
+            try {
+                const res = await fetch('/api/data');
+                const result = await res.json();
+                
+                if (result.status === 'success') {
+                    const data = result.data;
+                    document.getElementById('last-update').textContent = 'Last Scan: ' + new Date(data.timestamp).toLocaleTimeString();
+                    
+                    const grid = document.getElementById('grid');
+                    grid.innerHTML = ''; // Clear current
+                    
+                    let opps = data.opportunities || [];
+                    
+                    // Get selected platforms
+                    const selectedPlatforms = Array.from(document.querySelectorAll('.platform-cb:checked')).map(cb => cb.getAttribute('data-platform'));
+
+                    // Client-side visual filtering based on active brands and platforms
+                    if (currentConfig && currentConfig.brands) {
+                        opps = opps.filter(o => {
+                            const brandName = o.Modelo.split(' ')[0];
+                            const isBrandActive = currentConfig.brands[brandName] === true;
+                            const isPlatformActive = selectedPlatforms.includes(o.Plataforma || 'Kleinanzeigen');
+                            return isBrandActive && isPlatformActive;
+                        });
+                    } else {
+                        // Just filter platforms if config brands somehow empty
+                        opps = opps.filter(o => selectedPlatforms.includes(o.Plataforma || 'Kleinanzeigen'));
+                    }
+                    
+                    // Filter by max price 
+                    opps = opps.filter(o => {
+                        const listedPrice = parseFloat(o['Precio URL']);
+                        return !isNaN(listedPrice) && listedPrice <= maxPrice;
+                    });
+                    
+                    // Apply sorting
+                    const sortVal = document.getElementById('price-sort').value;
+                    if (sortVal === 'price-asc') {
+                        opps.sort((a, b) => parseFloat(a['Precio URL']) - parseFloat(b['Precio URL']));
+                    } else if (sortVal === 'price-desc') {
+                        opps.sort((a, b) => parseFloat(b['Precio URL']) - parseFloat(a['Precio URL']));
+                    } else if (sortVal === 'save-desc') {
+                        opps.sort((a, b) => {
+                            const saveA = parseFloat(a['Ahorro %'].replace('%', ''));
+                            const saveB = parseFloat(b['Ahorro %'].replace('%', ''));
+                            return saveB - saveA;
+                        });
+                    }
+                    
+                    // Count brands based on ALL data to show correct numbers even if filtered out
+                    const brandCounts = {};
+                    (data.opportunities || []).forEach(o => {
+                        const brandName = o.Modelo.split(' ')[0];
+                        brandCounts[brandName] = (brandCounts[brandName] || 0) + 1;
+                    });
+                    
+                    document.querySelectorAll('.filter-item').forEach(label => {
+                        const cb = label.querySelector('.filter-cb');
+                        const brand = cb ? cb.getAttribute('data-model') : null;
+                        const nameSpan = label.querySelector('.filter-name');
+                        if (brand && nameSpan) {
+                            const count = brandCounts[brand] || 0;
+                            nameSpan.textContent = `${brand} (${count})`;
+                        }
+                    });
+                    
+                    document.getElementById('total-opps').textContent = opps.length;
+                    
+                    if (opps.length > 0) {
+                        let totalAhorro = 0;
+                        opps.forEach(opp => {
+                            grid.appendChild(createCard(opp));
+                            totalAhorro += parseFloat(opp['Ahorro %'].replace('%', ''));
+                        });
+                        document.getElementById('avg-margin').textContent = (totalAhorro / opps.length).toFixed(1) + '%';
+                        lucide.createIcons();
+                    } else {
+                        grid.innerHTML = `
+                            <div class="empty-state">
+                                <i data-lucide="check-circle" class="empty-icon"></i>
+                                <p>No new opportunities matching your filters.</p>
+                                <span>The bot is monitoring the market.</span>
+                            </div>
+                        `;
+                        lucide.createIcons();
+                        document.getElementById('avg-margin').textContent = '0%';
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching data:", err);
+            } finally {
+                setTimeout(() => btn.classList.remove('spin'), 500);
+            }
+        };
+
+        // Setup Price Slider UI updates and trigger filtering
+        const slider = document.getElementById('price-slider');
+        const display = document.getElementById('max-price-display');
+        
+        // Re-fetch when platform toggles change
+        document.querySelectorAll('.platform-cb').forEach(cb => {
+            cb.addEventListener('change', fetchData);
+        });
+
+        slider.addEventListener('input', (e) => {
+            const val = e.target.value;
+            display.textContent = val >= 10000 ? '€10000+' : `€${val}`;
+        });
+        
+        slider.addEventListener('change', () => {
+            fetchData();
+        });
+
+        // Fetch Bot status logic
+        const fetchStatus = async () => {
+             try {
+                 const res = await fetch('/api/status');
+                 const result = await res.json();
+                 if (result.status === 'success') {
+                     const data = result.data;
+                     const container = document.getElementById('bot-progress-container');
+                     
+                     if (data.state === 'scanning') {
+                         container.style.display = 'block';
+                         document.getElementById('bot-progress-fill').style.width = `${data.progress}%`;
+                         document.getElementById('bot-progress-percent').textContent = `${data.progress}%`;
+                         document.getElementById('bot-status-text').textContent = `🔍 Scanning: ${data.model}`;
+                     } else {
+                         container.style.display = 'none';
+                     }
+                 }
+             } catch(e) {}
+        };
+
+        const updateAllFilters = async (value) => {
+            if (!currentConfig || !currentConfig.brands) return;
+            Object.keys(currentConfig.brands).forEach(b => currentConfig.brands[b] = value);
+            renderFilters(currentConfig);
+            try {
+                await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(currentConfig)
+                });
+                fetchData();
+            } catch(e) {}
+        };
+
+        document.getElementById('select-all-btn').addEventListener('click', () => updateAllFilters(true));
+        document.getElementById('clear-all-btn').addEventListener('click', () => updateAllFilters(false));
+
+        // Initial load and auto-refresh intervals
+        fetchConfig().then(() => fetchData());
+        setInterval(fetchData, 45000); // 45s for opportunities
+        setInterval(fetchStatus, 3000); // 3s for live loading bar
+        document.getElementById('price-sort').addEventListener('change', () => {
+            fetchData();
+        });
+
+        fetchStatus();
+
+        document.getElementById('refresh-btn').addEventListener('click', async () => {
+            fetchData(); // Update UI data immediately
+            try {
+                await fetch('/api/trigger_search', { method: 'POST' });
+                // Show visual feedback
+                const toast = document.getElementById('toast');
+                toast.textContent = '🚀 Search Triggered!';
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            } catch(e) {}
+        });
+    </script>
+</body>
+</html>
