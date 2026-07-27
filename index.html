@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=1.4">
+    <link rel="stylesheet" href="./style.css?v=1.4">
     <!-- Lucide for cool icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -332,17 +332,21 @@
             const maxPrice = parseFloat(maxPriceStr);
             
             try {
-                const res = await fetch('/api/data');
+                const res = await fetch('YOUR_SUPABASE_URL/rest/v1/listings?select=*', {
+                    headers: {
+                        'apikey': 'YOUR_SUPABASE_ANON_KEY',
+                        'Authorization': 'Bearer YOUR_SUPABASE_ANON_KEY'
+                    }
+                });
                 const result = await res.json();
                 
-                if (result.status === 'success') {
-                    const data = result.data;
-                    document.getElementById('last-update').textContent = 'Last Scan: ' + new Date(data.timestamp).toLocaleTimeString();
+                if (res.ok) {
+                    document.getElementById('last-update').textContent = 'Last Scan: ' + new Date().toLocaleTimeString();
                     
                     const grid = document.getElementById('grid');
                     grid.innerHTML = ''; // Clear current
                     
-                    let opps = data.opportunities || [];
+                    let opps = result || [];
                     
                     // Get selected platforms
                     const selectedPlatforms = Array.from(document.querySelectorAll('.platform-cb:checked')).map(cb => cb.getAttribute('data-platform'));
@@ -382,8 +386,8 @@
                     
                     // Count brands based on ALL data to show correct numbers even if filtered out
                     const brandCounts = {};
-                    (data.opportunities || []).forEach(o => {
-                        const brandName = o.Modelo.split(' ')[0];
+                    (result || []).forEach(o => {
+                        const brandName = (o.Modelo || 'Unknown').split(' ')[0];
                         brandCounts[brandName] = (brandCounts[brandName] || 0) + 1;
                     });
                     

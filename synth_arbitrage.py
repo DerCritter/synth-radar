@@ -5,6 +5,7 @@ import json
 import os
 import shutil
 import tempfile
+from supabase_client import SupabaseDB
 from datetime import datetime
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
@@ -130,32 +131,9 @@ def load_or_create_config():
             return config
 
 def safe_json_write(data, filepath):
-    """Escribe de forma atómica usando un archivo temporal para evitar corrupción."""
-    dir_name = os.path.dirname(filepath)
-    fd, temp_path = tempfile.mkstemp(dir=dir_name, text=True)
-    try:
-        with os.fdopen(fd, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-        # Rename is atomic on POSIX systems
-        os.replace(temp_path, filepath)
-    except Exception as e:
-        logging.error(f"Error en safe_json_write para {filepath}: {e}")
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+    pass
 
 def safe_json_read(filepath, default=None):
-    """Lee JSON de forma segura manejando errores de archivo parcial o bloqueo."""
-    if not os.path.exists(filepath):
-        return default
-    for _ in range(3): # Intentos
-        try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except json.JSONDecodeError:
-            time.sleep(0.5) # Esperar un poco si el archivo se está escribiendo
-        except Exception as e:
-            logging.error(f"Error leyendo {filepath}: {e}")
-            break
     return default
 
 def get_market_price(model_name):
@@ -456,90 +434,20 @@ def scrape_all_platforms():
             browser.close()
 
 def main():
-    print("🤖 Iniciando Bot Experto en Arbitraje de Sintetizadores...")
-    last_config_time = 0
-    refresh_flag = os.path.join(os.path.dirname(__file__), 'refresh.flag')
+    print("🤖 Iniciando Bot Experto en Arbitraje de Sintetizadores (Cloud Version)...")
     
-    while True:
-        config_file = os.path.join(os.path.dirname(__file__), 'config.json')
-        if os.path.exists(config_file):
-            current_config_time = os.path.getmtime(config_file)
-            if current_config_time > last_config_time and last_config_time != 0:
-                print("\n⚙️  Configuración modificada desde la Interfaz Web. Forzando re-escaneo inmediato...")
-            last_config_time = current_config_time
-                
-        opportunities = scrape_all_platforms()
-
-        if opportunities == "REFRESH":
-            if os.path.exists(refresh_flag):
-                 try: os.remove(refresh_flag)
-                 except: pass
-            continue
+    opportunities = scrape_all_platforms()
+    
+    if opportunities and opportunities != "REFRESH":
+        for opp in opportunities:
+            opp["Fecha Agregado"] = datetime.now().strftime("%d/%m/%Y %H:%M")
         
-        # GUARDAR Y PERSISTIR RESULTADOS
-        data_file = os.path.join(os.path.dirname(__file__), 'data.json')
-        
-        # 1. Leer históricos si existen
-        old_data = safe_json_read(data_file, default={"opportunities": []})
-        all_historic_opps = {opp['Enlace']: opp for opp in old_data.get('opportunities', [])}
-
-        # 2. Mezclar con los nuevos (los nuevos ganan si ya existían)
-        if opportunities:
-            for opp in opportunities:
-                # Conservar la fecha de agregado original si el anuncio ya existía
-                if opp['Enlace'] in all_historic_opps and "Fecha Agregado" in all_historic_opps[opp['Enlace']]:
-                    opp["Fecha Agregado"] = all_historic_opps[opp['Enlace']]["Fecha Agregado"]
-                else:
-                    opp["Fecha Agregado"] = datetime.now().strftime("%d/%m/%Y %H:%M")
-                    
-                all_historic_opps[opp['Enlace']] = opp
-                
-        # 3. Purgar listings que no se han visto en las últimas 24 horas (86400 segundos)
-        # Esto elimina los remanentes antiguos
-        current_time = datetime.now().timestamp()
-        purged_opps = {}
-        for link, opp in all_historic_opps.items():
-            last_seen = opp.get('last_seen', 0)
-            if current_time - last_seen < 86400:
-                purged_opps[link] = opp
-                
-        all_historic_opps = purged_opps
-        
-        # 4. Guardar la lista completa actualizada
-        final_list = list(all_historic_opps.values())
-        
-        # Limitar a los 100 más recientes para que la web no explote
-        final_list = final_list[-100:]
-
-        try:
-            safe_json_write({
-                "timestamp": datetime.now().isoformat(), 
-                "opportunities": final_list
-            }, data_file)
-        except Exception as e:
-            logging.error(f"Error persistiendo data.json: {e}")
-
-        if opportunities:
-            print(f"\n✅ Ciclo completado. {len(opportunities)} nuevas/actualizadas, {len(final_list)} total.")
-        else:
-            logging.info("Ciclo vacío. Manteniendo resultados anteriores en el Dashboard.")
-            
-        logging.info("Modo monitor activo. Esperando 15 minutos para el próximo ciclo...")
-        
-        status_file = os.path.join(os.path.dirname(__file__), 'status.json')
-        safe_json_write({"state": "idle", "progress": 100, "model": "Waiting for next cycle"}, status_file)
-        
-        # En vez de un sleep monolítico de 15 minutos, hacemos pequeños sleeps
-        for _ in range(90): 
-            time.sleep(10)
-            if os.path.exists(refresh_flag):
-                logging.info("🔄 Refresh manual detectado. Reiniciando escaneo...")
-                try: os.remove(refresh_flag)
-                except: pass
-                break
-            # Check for config changes - YA NO INTERRUMPIMOS EL SUEÑO
-            # Los checkboxes son ahora solo filtros visuales en el frontend
-            pass
+        db = SupabaseDB()
+        print(f"Upserting {len(opportunities)} opportunities to Supabase...")
+        db.upsert_listings(opportunities)
+        print(f"\n✅ Ciclo completado. {len(opportunities)} nuevas/actualizadas.")
+    else:
+        print("Ciclo vacío o abortado.")
 
 if __name__ == "__main__":
     main()

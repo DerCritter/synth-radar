@@ -1,5 +1,5 @@
-selenium
+playwright
 beautifulsoup4
 requests
-undetected-chromedriver
 tabulate
+supabase
