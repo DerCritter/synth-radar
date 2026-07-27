@@ -17,7 +17,43 @@
     
     <div class="app-container">
         <aside class="sidebar">
-            <div class="sidebar-header">
+            
+            <div class="sidebar-header" style="margin-top: 2rem;">
+                <i data-lucide="search"></i>
+                <h2>Search</h2>
+            </div>
+            <div class="search-container">
+                <input type="text" id="text-search" class="select-input" placeholder="Search models (e.g. Juno)..." style="width:100%; margin-bottom:1rem;">
+            </div>
+
+            <div class="sidebar-header" style="margin-top: 2.5rem;">
+                <i data-lucide="percent"></i>
+                <h2>Min Profitability (Margin)</h2>
+            </div>
+            <div class="price-slider-container">
+                <div class="price-display">
+                    Min Margin: <span id="min-profit-display">0%</span>
+                </div>
+                <input type="range" id="profit-slider" class="range-slider" min="0" max="80" step="5" value="0">
+            </div>
+
+            <div class="sidebar-header" style="margin-top: 2rem;">
+                <i data-lucide="tool"></i>
+                <h2>Condition</h2>
+            </div>
+            <div class="filters-container">
+                <label class="filter-item">
+                    <input type="checkbox" class="filter-cb condition-cb" data-condition="Used" checked>
+                    <span class="filter-name">Used / Good</span>
+                    <div class="checkbox-indicator"></div>
+                </label>
+                <label class="filter-item">
+                    <input type="checkbox" class="filter-cb condition-cb" data-condition="Defective">
+                    <span class="filter-name">Defective / Parts</span>
+                    <div class="checkbox-indicator"></div>
+                </label>
+            </div>
+<div class="sidebar-header" style="margin-top: 2rem;">
                 <i data-lucide="filter"></i>
                 <h2>Quick Filters</h2>
             </div>
@@ -367,6 +403,14 @@
                     }
                     
                     // Get selected platforms
+                    
+                    // Filters
+                    const searchTerm = document.getElementById('text-search').value.toLowerCase();
+                    const minProfitStr = document.getElementById('profit-slider').value;
+                    const minProfit = parseFloat(minProfitStr);
+                    const showDefective = document.querySelector('.condition-cb[data-condition="Defective"]').checked;
+                    const showUsed = document.querySelector('.condition-cb[data-condition="Used"]').checked;
+
                     const selectedPlatforms = Array.from(document.querySelectorAll('.platform-cb:checked')).map(cb => cb.getAttribute('data-platform'));
 
                     // Client-side visual filtering based on active brands and platforms
@@ -382,6 +426,27 @@
                         opps = opps.filter(o => selectedPlatforms.includes(o.plataforma || 'Kleinanzeigen'));
                     }
                     
+                    
+                    // Filter by Text Search
+                    if (searchTerm) {
+                        opps = opps.filter(o => (o.modelo || '').toLowerCase().includes(searchTerm));
+                    }
+                    
+                    // Filter by Condition
+                    opps = opps.filter(o => {
+                        const condition = (o.estado || '').toLowerCase();
+                        const isDefective = condition.includes('defekt') || condition.includes('parts') || condition.includes('bastler');
+                        if (isDefective && !showDefective) return false;
+                        if (!isDefective && !showUsed) return false;
+                        return true;
+                    });
+                    
+                    // Filter by Min Profit
+                    opps = opps.filter(o => {
+                        const saveVal = parseFloat(String(o.ahorro_porcentaje || '0').replace('%', ''));
+                        return !isNaN(saveVal) && saveVal >= minProfit;
+                    });
+
                     // Filter by max price 
                     opps = opps.filter(o => {
                         const listedPrice = parseFloat(o.precio);
@@ -450,6 +515,23 @@
         const slider = document.getElementById('price-slider');
         const display = document.getElementById('max-price-display');
         
+        
+        // New Event Listeners
+        document.getElementById('text-search').addEventListener('input', () => {
+            fetchData();
+        });
+        
+        const profitSlider = document.getElementById('profit-slider');
+        const profitDisplay = document.getElementById('min-profit-display');
+        profitSlider.addEventListener('input', (e) => {
+            profitDisplay.textContent = e.target.value + '%';
+        });
+        profitSlider.addEventListener('change', () => fetchData());
+        
+        document.querySelectorAll('.condition-cb').forEach(cb => {
+            cb.addEventListener('change', fetchData);
+        });
+
         // Re-fetch when platform toggles change
         document.querySelectorAll('.platform-cb').forEach(cb => {
             cb.addEventListener('change', fetchData);

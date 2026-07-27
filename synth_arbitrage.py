@@ -317,6 +317,11 @@ def scrape_all_platforms():
                 queries.append((f'{brand}-synth', 1))
                 queries.append((f'{brand}-drum-machine', 1))
                 queries.append((f'{brand}-groovebox', 1))
+                queries.append((f'{brand}-sampler', 1))
+                queries.append((f'{brand}-sequencer', 1))
+                queries.append((f'{brand}-module', 1))
+                if brand not in ['Yamaha', 'Casio', 'Hohner']: # avoid non-modular brands for eurorack to save time
+                    queries.append((f'{brand}-eurorack', 1))
 
                 for (base_query, pages) in queries:
                     for page_num in range(1, pages + 1):
