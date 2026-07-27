@@ -106,6 +106,18 @@
                     <option value="save-desc">🔥 Mayor Ahorro (Hot Deals)</option>
                 </select>
             </div>
+        
+            <div class="sidebar-header" style="margin-top: 2.5rem;">
+                <i data-lucide="shopping-bag"></i>
+                <h2>Sponsors</h2>
+            </div>
+            <!-- Thomann / MusicStore Affiliate Banner Placeholder -->
+            <div class="ad-banner-slot" style="margin-top: 1rem; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px dashed rgba(255, 255, 255, 0.2); text-align: center; color: #94a3b8; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease;">
+                <div style="margin-bottom: 0.5rem;"><i data-lucide="image" style="width: 24px; height: 24px; opacity: 0.5;"></i></div>
+                <strong>Ad Space</strong><br>
+                <span>Pega aquí tu código HTML de Thomann o Music Store</span>
+            </div>
+
         </aside>
 
         <main class="dashboard">
@@ -168,6 +180,40 @@
     <div id="toast" class="toast">Message Copied!</div>
 
     <script>
+
+        // ==========================================
+        // 💰 MONETIZATION & AFFILIATE SETTINGS 💰
+        // ==========================================
+        const AFFILIATE_CONFIG = {
+            // Your eBay Partner Network Campaign ID (e.g., "5338xxxxxx")
+            EBAY_CAMPID: "TU_EBAY_ID_AQUI", 
+            
+            // Your Reverb Affiliate ID/URL structure
+            REVERB_AFFILIATE_ID: "TU_REVERB_ID_AQUI" 
+        };
+
+        // Helper function to inject affiliate tracking into URLs
+        function getAffiliateUrl(originalUrl, platform) {
+            if (!originalUrl || originalUrl === '#') return '#';
+            
+            if (platform === 'eBay' && AFFILIATE_CONFIG.EBAY_CAMPID !== "TU_EBAY_ID_AQUI") {
+                // EPN standard tracking format
+                // Appends campid and customid to the eBay URL
+                const separator = originalUrl.includes('?') ? '&' : '?';
+                return `${originalUrl}${separator}mkcid=1&mkrid=707-53477-19255-0&siteid=77&campid=${AFFILIATE_CONFIG.EBAY_CAMPID}&customid=synthradar&toolid=10001&mkevt=1`;
+            }
+            
+            if (platform === 'Reverb' && AFFILIATE_CONFIG.REVERB_AFFILIATE_ID !== "TU_REVERB_ID_AQUI") {
+                // Partnerize Reverb format (depends on exact Reverb affiliate link structure)
+                // Assuming it's an appended param for now:
+                const separator = originalUrl.includes('?') ? '&' : '?';
+                return `${originalUrl}${separator}awc=${AFFILIATE_CONFIG.REVERB_AFFILIATE_ID}`;
+            }
+            
+            return originalUrl;
+        }
+        // ==========================================
+
         lucide.createIcons();
 
         const formatCurrency = (amount) => {
@@ -271,10 +317,10 @@
                 </div>
 
                 <div class="card-actions">
-                    <a href="${opp.url}" target="_blank" class="btn btn-primary" title="Open in Kleinanzeigen">
+                    <a href="${getAffiliateUrl(opp.url, opp.plataforma)}" target="_blank" class="btn btn-primary" title="Open in Kleinanzeigen">
                         <i data-lucide="external-link"></i> View Ad
                     </a>
-                    <a href="${opp.reverb || '#'}" target="_blank" class="btn btn-reverb" title="See Reverb prices">
+                    <a href="${getAffiliateUrl(opp.reverb || '#', 'Reverb')}" target="_blank" class="btn btn-reverb" title="See Reverb prices">
                         <i data-lucide="bar-chart-2"></i> Reverb
                     </a>
                     <button class="btn btn-secondary copy-btn" data-draft="${encodeURIComponent(opp['Mensaje Borrador'] || '')}">
