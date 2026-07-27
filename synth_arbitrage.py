@@ -367,6 +367,9 @@ def scrape_all_platforms():
                             if not img_elem:
                                 img_elem = ad.find('img')
                             image_url = img_elem.get('src', '') if img_elem else ''
+                            if image_url:
+                                # Upgrade Kleinanzeigen thumbnail quality ($_2 -> $_59 or $_57)
+                                image_url = re.sub(r'\$_\d+\.JPG', '$_59.JPG', image_url, flags=re.IGNORECASE)
                             
                             price = extract_price(price_str)
                             analysis = analyze_listing(title, desc, price, link, image_url, source='Kleinanzeigen')
@@ -405,6 +408,9 @@ def scrape_all_platforms():
                             if title_el and price_el:
                                 price = extract_price(price_el.text.strip())
                                 img_url = parent.find('img').get('src', '') if parent.find('img') else ''
+                                if img_url:
+                                    # Upgrade eBay thumbnail quality (s-l225 -> s-l500)
+                                    img_url = re.sub(r's-l\d+\.', 's-l500.', img_url, flags=re.IGNORECASE)
                                 opp = analyze_listing(title_el.text.strip(), '', price, href, img_url, source='eBay')
                                 if opp:
                                     results.append(opp)
