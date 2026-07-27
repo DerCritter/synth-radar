@@ -207,7 +207,10 @@
                 ${isNew ? '<div class="new-badge">NEW</div>' : ''}
                 ${isGreatDeal ? '<div class="great-deal-badge"><i data-lucide="flame"></i>HOT DEAL</div>' : ''}
                 <div class="platform-badge ${platformClass}"><i data-lucide="${platformIcon}"></i>${platform}</div>
-                ${hasImage ? `<div class="card-image-wrap"><img class="card-image" src="${opp.imagen}" alt="${opp.modelo}" onerror="this.parentElement.style.display='none'"></div>` : ''}
+                ${hasImage ? `<div class="card-image-wrap">
+                    <img class="card-image-bg" src="${opp.imagen}" alt="">
+                    <img class="card-image" src="${opp.imagen}" alt="${opp.modelo}" onerror="this.parentElement.style.display='none'">
+                </div>` : ''}
                 
                 <div class="card-header">
                     <div class="tags">
