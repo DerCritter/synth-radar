@@ -82,6 +82,11 @@
                     <span class="filter-name">eBay</span>
                     <div class="checkbox-indicator"></div>
                 </label>
+                <label class="filter-item">
+                    <input type="checkbox" class="filter-cb platform-cb" data-platform="Thomann B-Stock" checked>
+                    <span class="filter-name">Thomann B-Stock</span>
+                    <div class="checkbox-indicator"></div>
+                </label>
             </div>
 
             <div class="sidebar-header" style="margin-top: 2.5rem;">
@@ -534,9 +539,32 @@
                     
                     if (opps.length > 0) {
                         let totalAhorro = 0;
-                        opps.forEach(opp => {
+                        let adCounter = 0;
+                        opps.forEach((opp, index) => {
                             grid.appendChild(createCard(opp));
                             totalAhorro += parseFloat(String(opp.ahorro_porcentaje || '0').replace('%', ''));
+                            
+                            // Inyectar 2 anuncios cada 12 items
+                            if ((index + 1) % 12 === 0) {
+                                for(let i=0; i<2; i++) {
+                                    const adCard = document.createElement('div');
+                                    adCard.className = 'card ad-card';
+                                    adCard.style.border = '1px dashed rgba(255, 255, 255, 0.2)';
+                                    adCard.style.display = 'flex';
+                                    adCard.style.flexDirection = 'column';
+                                    adCard.style.justifyContent = 'center';
+                                    adCard.style.alignItems = 'center';
+                                    adCard.style.textAlign = 'center';
+                                    adCard.style.padding = '2rem';
+                                    adCard.style.background = 'rgba(255, 255, 255, 0.03)';
+                                    adCard.innerHTML = `
+                                        <i data-lucide="shopping-cart" style="width: 32px; height: 32px; opacity: 0.5; margin-bottom: 1rem; color: #94a3b8;"></i>
+                                        <h3 style="margin: 0; font-size: 1.1rem; color: #f8fafc;">Promoted / Ad Space</h3>
+                                        <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 0.5rem;">Pega tu código HTML del banner afiliado aquí.</p>
+                                    `;
+                                    grid.appendChild(adCard);
+                                }
+                            }
                         });
                         document.getElementById('avg-margin').textContent = (totalAhorro / opps.length).toFixed(1) + '%';
                         lucide.createIcons();
