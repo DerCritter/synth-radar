@@ -26,7 +26,7 @@ jobs:
 
       - name: Run Scraper
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          SUPABASE_URL: https://wnoiyxgdbemamajebqom.supabase.co
+          SUPABASE_KEY: sb_publishable_VCnH38uDOJvfet7bJHRnAw_9VZaDSmp
         run: |
           python synth_arbitrage.py

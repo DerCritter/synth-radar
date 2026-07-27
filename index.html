@@ -332,10 +332,10 @@
             const maxPrice = parseFloat(maxPriceStr);
             
             try {
-                const res = await fetch('YOUR_SUPABASE_URL/rest/v1/listings?select=*', {
+                const res = await fetch('https://wnoiyxgdbemamajebqom.supabase.co/rest/v1/listings?select=*', {
                     headers: {
-                        'apikey': 'YOUR_SUPABASE_ANON_KEY',
-                        'Authorization': 'Bearer YOUR_SUPABASE_ANON_KEY'
+                        'apikey': 'sb_publishable_VCnH38uDOJvfet7bJHRnAw_9VZaDSmp',
+                        'Authorization': 'Bearer sb_publishable_VCnH38uDOJvfet7bJHRnAw_9VZaDSmp'
                     }
                 });
                 const result = await res.json();
