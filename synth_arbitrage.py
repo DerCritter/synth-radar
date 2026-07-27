@@ -1,3 +1,4 @@
+import random
 import time
 import logging
 import re
@@ -285,129 +286,136 @@ def analyze_listing(title, description, price, url, image_url="", source="Kleina
     return None
 
 def scrape_all_platforms():
-    logging.info("Iniciando escaneo en kleinanzeigen.de y ebay.de con Playwright...")
-
+    logging.info('Iniciando escaneo en kleinanzeigen.de y ebay.de con Playwright (STEALTH MODE)...')
     results = []
     
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=[
-                "--disable-blink-features=AutomationControlled",
-                "--no-sandbox",
-                "--disable-dev-shm-usage",
-            ]
-        )
-        context = browser.new_context(
-            user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
-            viewport={"width": 1280, "height": 800},
-            locale="de-DE",
-        )
-        # Patch navigator.webdriver API
-        
-        page = context.new_page()
+    # Importar stealth aquí para no romper si no está instalado globalmente
+    try:
+        from playwright_stealth import stealth_sync
+    except ImportError:
+        stealth_sync = None
 
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        
         try:
             seen_links = set()
+            major_brands = ['Roland', 'Korg', 'Yamaha', 'Akai', 'Elektron']
+            
+            # Kleinanzeigen con Amnesia (Contexto por Marca) y Stealth
+            for brand in TARGET_BRANDS:
+                logging.info(f'--- Iniciando escaneo de marca: {brand} ---')
+                # Amnesia: Nuevo contexto para cada marca
+                context = browser.new_context(viewport={'width': 1280, 'height': 800}, locale='de-DE')
+                page = context.new_page()
+                
+                if stealth_sync:
+                    stealth_sync(page)
 
-            # Búsquedas amplias EXCLUSIVAMENTE por marca + categoría
-            queries = []
-            major_brands = ["Roland", "Korg", "Yamaha", "Akai", "Elektron"]
+                queries = []
+                queries.append((f'{brand}-synthesizer', 2 if brand in major_brands else 1))
+                queries.append((f'{brand}-synth', 1))
+                queries.append((f'{brand}-drum-machine', 1))
+                queries.append((f'{brand}-groovebox', 1))
+
+                for (base_query, pages) in queries:
+                    for page_num in range(1, pages + 1):
+                        search_display = base_query.replace('-', ' ').title()
+                        if page_num == 1:
+                            url = f'https://www.kleinanzeigen.de/s-musikinstrumente/{base_query}/k0c74'
+                        else:
+                            url = f'https://www.kleinanzeigen.de/s-musikinstrumente/seite:{page_num}/{base_query}/k0c74'
+                        
+                        for attempt in range(3):
+                            try:
+                                # Comportamiento humano: Retraso aleatorio antes de navegar
+                                time.sleep(random.uniform(2.5, 5.5))
+                                page.goto(url, wait_until='domcontentloaded', timeout=20000)
+                                # Simular lectura de página
+                                time.sleep(random.uniform(3.0, 6.0))
+                                
+                                # Mouse movement falso
+                                page.mouse.move(random.randint(100, 500), random.randint(100, 500))
+                                page.mouse.wheel(0, random.randint(300, 800))
+                                time.sleep(random.uniform(1.0, 2.5))
+                                
+                                break
+                            except Exception as e:
+                                logging.warning(f'Timeout/error cargando {url} (Intento {attempt + 1}/3): {e}')
+                                if attempt == 2:
+                                    continue
+                                time.sleep(random.uniform(5.0, 10.0))
+                        
+                        soup = BeautifulSoup(page.content(), 'html.parser')
+                        ads = soup.find_all('article', class_='aditem')
+                        logging.info(f'[{search_display} p{page_num}] Encontrados {len(ads)} anuncios.')
+                        
+                        for ad in ads:
+                            title_elem = ad.find('a', class_='ellipsis')
+                            desc_elem = ad.find('p', class_='aditem-main--middle--description')
+                            price_elem = ad.find('p', class_='aditem-main--middle--price-shipping--price')
+                            
+                            if not title_elem or not price_elem:
+                                continue
+                                
+                            title = title_elem.text.strip()
+                            link = 'https://www.kleinanzeigen.de' + title_elem['href']
+                            desc = desc_elem.text.strip() if desc_elem else ''
+                            price_str = price_elem.text.strip()
+                            
+                            img_elem = ad.find('img', class_='imagebox-thumbnail')
+                            if not img_elem:
+                                img_elem = ad.find('img')
+                            image_url = img_elem.get('src', '') if img_elem else ''
+                            
+                            price = extract_price(price_str)
+                            analysis = analyze_listing(title, desc, price, link, image_url, source='Kleinanzeigen')
+                            
+                            if analysis and link not in seen_links:
+                                seen_links.add(link)
+                                results.append(analysis)
+                
+                # Cerrar contexto para limpiar cookies (Amnesia)
+                context.close()
+                time.sleep(random.uniform(4.0, 8.0))
+
+            # eBay no es tan estricto, usamos un solo contexto
+            logging.info('Iniciando escaneo en ebay.de...')
+            context = browser.new_context(viewport={'width': 1280, 'height': 800}, locale='de-DE')
+            page = context.new_page()
             
             for brand in TARGET_BRANDS:
-                # Variaciones de Synthesizer
-                queries.append((f"{brand}-synthesizer", 3 if brand in major_brands else 1))
-                queries.append((f"{brand}-synth", 2 if brand in major_brands else 1))
-                queries.append((f"{brand}-synthetizer", 1))
-                
-                # Drum machines y Grooveboxes
-                queries.append((f"{brand}-drum-machine", 2 if brand in major_brands else 1))
-                queries.append((f"{brand}-groovebox", 1))
-                
-            total_items = sum(q[1] for q in queries)
-            processed_items = 0
-
-            for base_query, pages in queries:
-                for page_num in range(1, pages + 1):
-                    processed_items += 1
-                    search_display = base_query.replace('-', ' ').title()
-                    
-                    # URL construct with pagination
-                    if page_num == 1:
-                        url = f"https://www.kleinanzeigen.de/s-musikinstrumente/{base_query}/k0c74"
-                    else:
-                        url = f"https://www.kleinanzeigen.de/s-musikinstrumente/seite:{page_num}/{base_query}/k0c74"
-                    
-                    for attempt in range(3):
-                        try:
-                            page.goto(url, wait_until="domcontentloaded", timeout=15000)
-                            page.wait_for_timeout(2000)
-                            break # Success
-                        except Exception as e:
-                            logging.warning(f"Timeout/error cargando {url} (Intento {attempt+1}/3): {e}")
-                            if attempt == 2:
-                                continue
-                            time.sleep(2 ** attempt) # Exponential backoff
-
-                    soup = BeautifulSoup(page.content(), 'html.parser')
-                    ads = soup.find_all('article', class_='aditem')
-                    logging.info(f"[{search_display} p{page_num}] Encontrados {len(ads)} anuncios.")
-
-                    for ad in ads:
-                        title_elem = ad.find('a', class_='ellipsis')
-                        desc_elem = ad.find('p', class_='aditem-main--middle--description')
-                        price_elem = ad.find('p', class_='aditem-main--middle--price-shipping--price')
-
-                        if not title_elem or not price_elem:
-                            continue
-
-                        title = title_elem.text.strip()
-                        link = "https://www.kleinanzeigen.de" + title_elem['href']
-                        desc = desc_elem.text.strip() if desc_elem else ""
-                        price_str = price_elem.text.strip()
-
-                        # Extract thumbnail image if available
-                        img_elem = ad.find('img', class_='imagebox-thumbnail')
-                        if not img_elem:
-                            img_elem = ad.find('img')  # fallback to any img
-                        image_url = img_elem.get('src', '') if img_elem else ''
-
-                        price = extract_price(price_str)
-                        analysis = analyze_listing(title, desc, price, link, image_url, source="Kleinanzeigen")
-
-                        if analysis and link not in seen_links:
-                            seen_links.add(link)
-                            results.append(analysis)
-
-            # ----------------------------------------------------
-            # EBAY SCRAPING LOOP
-            # ----------------------------------------------------
-            logging.info("Iniciando escaneo en ebay.de...")
-            for brand in TARGET_BRANDS:
-                url = f"https://www.ebay.de/sch/i.html?_nkw={brand}+synthesizer&LH_BIN=1&LH_ItemCondition=3000&_ipg=60"
+                url = f'https://www.ebay.de/sch/i.html?_nkw={brand}+synthesizer&LH_BIN=1&LH_ItemCondition=3000&_ipg=60'
                 try:
-                    page.goto(url, wait_until="domcontentloaded", timeout=15000)
-                    page.wait_for_timeout(2000)
+                    time.sleep(random.uniform(2.0, 4.0))
+                    page.goto(url, wait_until='domcontentloaded', timeout=15000)
+                    time.sleep(random.uniform(2.0, 4.0))
+                    
                     soup = BeautifulSoup(page.content(), 'html.parser')
                     for link in soup.find_all('a', href=lambda h: h and '/itm/' in h):
                         href = link.get('href').split('?')[0]
-                        if href in seen_links: continue
+                        if href in seen_links:
+                            continue
                         seen_links.add(href)
                         parent = link.find_parent('li')
                         if parent:
                             title_el = parent.find(class_=lambda c: c and 'title' in c)
                             price_el = parent.find(class_=lambda c: c and 'price' in c)
+                            
                             if title_el and price_el:
                                 price = extract_price(price_el.text.strip())
                                 img_url = parent.find('img').get('src', '') if parent.find('img') else ''
-                                opp = analyze_listing(title_el.text.strip(), "", price, href, img_url, source="eBay")
-                                if opp: results.append(opp)
+                                opp = analyze_listing(title_el.text.strip(), '', price, href, img_url, source='eBay')
+                                if opp:
+                                    results.append(opp)
                 except Exception as e:
-                    logging.error(f"Error parseando tarjeta de eBay: {e}")
-
+                    logging.error(f'Error parseando tarjeta de eBay: {e}')
+            
+            context.close()
             return results
+            
         except Exception as e:
-            logging.error(f"Error durante el scraping: {e}")
+            logging.error(f'Error durante el scraping: {e}')
         finally:
             browser.close()
 

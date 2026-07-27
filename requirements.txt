@@ -3,3 +3,4 @@ beautifulsoup4
 requests
 tabulate
 supabase
+playwright-stealth==1.0.6
