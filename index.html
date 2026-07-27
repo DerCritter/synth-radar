@@ -307,17 +307,33 @@
             });
         };
 
-        const fetchConfig = async () => {
-            try {
-                const res = await fetch('/api/config');
-                const result = await res.json();
-                if (result.status === 'success') {
-                    currentConfig = result.config;
-                    renderFilters(currentConfig);
-                }
-            } catch (err) {
-                console.error("Error fetching config:", err);
+        const initConfigFromData = (data) => {
+            let savedConfig = localStorage.getItem('synthRadarConfig');
+            if (savedConfig) {
+                try {
+                    currentConfig = JSON.parse(savedConfig);
+                } catch(e) {}
             }
+            
+            if (!currentConfig) {
+                currentConfig = { brands: {} };
+            }
+
+            // Ensure all brands in data exist in config
+            let changed = false;
+            (data || []).forEach(o => {
+                const brandName = (o.modelo || 'Unknown').split(' ')[0];
+                if (currentConfig.brands[brandName] === undefined) {
+                    currentConfig.brands[brandName] = true;
+                    changed = true;
+                }
+            });
+
+            if (changed) {
+                localStorage.setItem('synthRadarConfig', JSON.stringify(currentConfig));
+            }
+            
+            renderFilters(currentConfig);
         };
 
         const fetchData = async () => {
@@ -341,6 +357,11 @@
                     grid.innerHTML = ''; // Clear current
                     
                     let opps = result || [];
+
+                    // Initialize config with dynamic brands from data if first load
+                    if (!currentConfig || Object.keys(currentConfig.brands || {}).length === 0) {
+                        initConfigFromData(opps);
+                    }
                     
                     // Get selected platforms
                     const selectedPlatforms = Array.from(document.querySelectorAll('.platform-cb:checked')).map(cb => cb.getAttribute('data-platform'));
@@ -440,25 +461,19 @@
             fetchData();
         });
 
-        const updateAllFilters = async (value) => {
+        const updateAllFilters = (value) => {
             if (!currentConfig || !currentConfig.brands) return;
             Object.keys(currentConfig.brands).forEach(b => currentConfig.brands[b] = value);
+            localStorage.setItem('synthRadarConfig', JSON.stringify(currentConfig));
             renderFilters(currentConfig);
-            try {
-                await fetch('/api/config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(currentConfig)
-                });
-                fetchData();
-            } catch(e) {}
+            fetchData();
         };
 
         document.getElementById('select-all-btn').addEventListener('click', () => updateAllFilters(true));
         document.getElementById('clear-all-btn').addEventListener('click', () => updateAllFilters(false));
 
         // Initial load and auto-refresh intervals
-        fetchConfig().then(() => fetchData());
+        fetchData();
         setInterval(fetchData, 45000); // 45s for opportunities
         
         document.getElementById('price-sort').addEventListener('change', () => {
