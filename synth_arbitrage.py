@@ -104,17 +104,17 @@ MARKET_VALUES = {
 }
 
 def load_or_create_config():
-    config_file = os.path.join(os.path.dirname(__file__), 'config.json')
+    config_file = os.path.join(os.path.dirname(__file__), "config.json")
     
     if not os.path.exists(config_file):
         config = {
             "brands": {brand: True for brand in TARGET_BRANDS}
         }
-        with open(config_file, 'w', encoding='utf-8') as f:
+        with open(config_file, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=4)
         return config
     else:
-        with open(config_file, 'r', encoding='utf-8') as f:
+        with open(config_file, "r", encoding="utf-8") as f:
             config = json.load(f)
             
             # Auto-migrate dictionary format if needed
@@ -156,7 +156,7 @@ def extract_price(price_str):
     try:
         # Remueve el signo del Euro y limpia espacios
         clean = price_str.replace("€", "").strip()
-        # Kleinanzeigen usa '.' para miles y ',' para decimales, o nada.
+        # Kleinanzeigen usa "." para miles y "," para decimales, o nada.
         # Caso 1: 1.250,50 -> 1250.50
         # Caso 2: 450 -> 450
         if "," in clean and "." in clean:
@@ -167,13 +167,13 @@ def extract_price(price_str):
             # Si solo hay un punto, suele ser decimal en Python pero Miles en Alemán.
             # En Kleinanzeigen suele ser miles (ej. 1.200). 
             # Si el punto está seguido de 3 números, es miles.
-            if re.search(r'\.\d{3}', clean):
+            if re.search(r"\.\d{3}", clean):
                 clean = clean.replace(".", "")
             else:
                 pass # Es decimal
                 
         # Extraer solo el número (ignorar VB u otros textos)
-        match = re.search(r'(\d+\.?\d*)', clean)
+        match = re.search(r"(\d+\.?\d*)", clean)
         if not match:
             return None
         price = float(match.group(1))
@@ -191,7 +191,7 @@ def analyze_listing(title, description, price, url, image_url="", source="Kleina
     # 1. Filtro de descarte (Anuncios de "Busco", accesorios, re-ediciones modernas, manuales, etc.)
     # Exigir límites de palabra usando RegEx para evitar que "ministry" filtre "mini" por error
     for ignore in CONDITION_IGNORE:
-        if re.search(rf'\b{ignore}\b', title_lower):
+        if re.search(rf"\b{ignore}\b", title_lower):
             return None
             
     # Filtro de precio mínimo para evitar piezas sueltas
@@ -211,10 +211,10 @@ def analyze_listing(title, description, price, url, image_url="", source="Kleina
     
     for model in all_models:
         # Separa el modelo por espacios y guiones
-        parts = re.split(r'[\s\-]+', model.lower())
+        parts = re.split(r"[\s\-]+", model.lower())
         # Escapa cada parte y únelas permitiendo espacios, guiones o NADA entre ellas
-        pattern_str = r'[\s\-]*'.join([re.escape(p) for p in parts])
-        pattern = rf'\b{pattern_str}\b'
+        pattern_str = r"[\s\-]*".join([re.escape(p) for p in parts])
+        pattern = rf"\b{pattern_str}\b"
         
         if re.search(pattern, clean_title):
             detected_model = model
@@ -287,17 +287,7 @@ def analyze_listing(title, description, price, url, image_url="", source="Kleina
 def scrape_all_platforms():
     logging.info("Iniciando escaneo en kleinanzeigen.de y ebay.de con Playwright...")
 
-    def update_status(state, progress, current_model=""):
-        status_file = os.path.join(os.path.dirname(__file__), 'status.json')
-        safe_json_write({"state": state, "progress": progress, "model": current_model}, status_file)
-
-    class RefreshTriggered(Exception):
-        """Exception raised when a manual refresh is requested to abort the current scan."""
-        pass
-
     results = []
-
-    refresh_flag = os.path.join(os.path.dirname(__file__), 'refresh.flag')
     
     with sync_playwright() as p:
         browser = p.chromium.launch(
@@ -339,15 +329,8 @@ def scrape_all_platforms():
 
             for base_query, pages in queries:
                 for page_num in range(1, pages + 1):
-                    # Check for refresh flag to abort current scan
-                    if os.path.exists(refresh_flag):
-                        logging.info("🔄 Refresh manual detectado DURANTE el escaneo. Abortando ciclo actual...")
-                        raise RefreshTriggered()
-
                     processed_items += 1
-                    progress = int((processed_items / total_items) * 100) if total_items > 0 else 0
                     search_display = base_query.replace('-', ' ').title()
-                    update_status("scanning", progress, f"Deep Search: {search_display} (pág {page_num}/{pages})")
                     
                     # URL construct with pagination
                     if page_num == 1:
@@ -401,8 +384,6 @@ def scrape_all_platforms():
             # ----------------------------------------------------
             logging.info("Iniciando escaneo en ebay.de...")
             for brand in TARGET_BRANDS:
-                if os.path.exists(refresh_flag): raise RefreshTriggered()
-                update_status("scanning", progress, f"Deep Search: eBay {brand}")
                 url = f"https://www.ebay.de/sch/i.html?_nkw={brand}+synthesizer&LH_BIN=1&LH_ItemCondition=3000&_ipg=60"
                 try:
                     page.goto(url, wait_until="domcontentloaded", timeout=15000)
@@ -425,12 +406,9 @@ def scrape_all_platforms():
                     logging.error(f"Error parseando tarjeta de eBay: {e}")
 
             return results
-        except RefreshTriggered:
-            return "REFRESH"
         except Exception as e:
             logging.error(f"Error durante el scraping: {e}")
         finally:
-            update_status("idle", 100, "")
             browser.close()
 
 def main():
@@ -438,7 +416,7 @@ def main():
     
     opportunities = scrape_all_platforms()
     
-    if opportunities and opportunities != "REFRESH":
+    if opportunities:
         for opp in opportunities:
             opp["Fecha Agregado"] = datetime.now().strftime("%d/%m/%Y %H:%M")
         

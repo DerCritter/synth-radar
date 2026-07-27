@@ -87,9 +87,6 @@
                     <span class="pulse-dot"></span>
                     <span id="last-update">Waiting for data...</span>
                 </div>
-                <button id="refresh-btn" class="icon-btn" title="Refresh Data">
-                    <i data-lucide="refresh-cw"></i>
-                </button>
             </div>
         </header>
 
@@ -190,19 +187,19 @@
 
         const createCard = (opp) => {
             const card = document.createElement('div');
-            const savingsFloat = parseFloat(opp['Ahorro %'].replace('%', ''));
+            const savingsFloat = parseFloat(String(opp.ahorro_porcentaje || '0').replace('%', ''));
             const isGreatDeal = savingsFloat >= 40;
-            const isNew = !seenAds[opp.Enlace];
+            const isNew = !seenAds[opp.url];
             
             card.className = `opp-card ${isGreatDeal ? 'great-deal' : ''} ${isNew ? 'is-new' : ''}`;
-            card.setAttribute('data-url', opp.Enlace);
+            card.setAttribute('data-url', opp.url);
             card.style.animation = 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards';
             
-            const isDefekt = opp.Estado.includes('Defekt');
+            const isDefekt = String(opp.estado || '').includes('Defekt');
             const stateClass = isDefekt ? 'state-defekt' : 'state-funcional';
-            const hasImage = opp.Imagen && opp.Imagen.trim() !== '';
+            const hasImage = opp.imagen && opp.imagen.trim() !== '';
             
-            const platform = opp.Plataforma || 'Kleinanzeigen';
+            const platform = opp.plataforma || 'Kleinanzeigen';
             const platformClass = platform === 'eBay' ? 'badge-ebay' : 'badge-kleinanzeigen';
             const platformIcon = platform === 'eBay' ? 'shopping-cart' : 'shopping-bag';
             
@@ -210,38 +207,38 @@
                 ${isNew ? '<div class="new-badge">NEW</div>' : ''}
                 ${isGreatDeal ? '<div class="great-deal-badge"><i data-lucide="flame"></i>HOT DEAL</div>' : ''}
                 <div class="platform-badge ${platformClass}"><i data-lucide="${platformIcon}"></i>${platform}</div>
-                ${hasImage ? `<div class="card-image-wrap"><img class="card-image" src="${opp.Imagen}" alt="${opp.Modelo}" onerror="this.parentElement.style.display='none'"></div>` : ''}
+                ${hasImage ? `<div class="card-image-wrap"><img class="card-image" src="${opp.imagen}" alt="${opp.modelo}" onerror="this.parentElement.style.display='none'"></div>` : ''}
                 
                 <div class="card-header">
                     <div class="tags">
-                        <span class="tag ${stateClass}">${opp.Estado}</span>
-                        <span class="tag tag-save">${opp['Ahorro %']} Off</span>
-                        <span class="tag tag-date"><i data-lucide="clock"></i> ${opp['Fecha Agregado'] || 'Reciente'}</span>
+                        <span class="tag ${stateClass}">${opp.estado}</span>
+                        <span class="tag tag-save">${opp.ahorro_porcentaje} Off</span>
+                        <span class="tag tag-date"><i data-lucide="clock"></i> ${opp.fecha_agregado || 'Reciente'}</span>
                     </div>
                 </div>
                 
-                <h2 class="model-name">${opp.Modelo}</h2>
+                <h2 class="model-name">${opp.modelo}</h2>
                 
                 <div class="price-row">
                     <div class="price-col">
                         <span class="price-label">Listed Price</span>
-                        <span class="price-value highlight">€${opp['Precio URL']}</span>
+                        <span class="price-value highlight">€${opp.precio}</span>
                     </div>
                     <div class="price-vs"><i data-lucide="arrow-right"></i></div>
                     <div class="price-col">
                         <span class="price-label">Reverb Market</span>
-                        <span class="price-value">${opp['Precio Mercado']}</span>
+                        <span class="price-value">${opp.precio_mercado}</span>
                     </div>
                 </div>
 
                 <div class="card-actions">
-                    <a href="${opp.Enlace}" target="_blank" class="btn btn-primary" title="Open in Kleinanzeigen">
+                    <a href="${opp.url}" target="_blank" class="btn btn-primary" title="Open in Kleinanzeigen">
                         <i data-lucide="external-link"></i> View Ad
                     </a>
                     <a href="${opp.Reverb || '#'}" target="_blank" class="btn btn-reverb" title="See Reverb prices">
                         <i data-lucide="bar-chart-2"></i> Reverb
                     </a>
-                    <button class="btn btn-secondary copy-btn" data-draft="${encodeURIComponent(opp['Mensaje Borrador'])}">
+                    <button class="btn btn-secondary copy-btn" data-draft="${encodeURIComponent(opp['Mensaje Borrador'] || '')}">
                         <i data-lucide="copy"></i> Draft
                     </button>
                 </div>
@@ -256,7 +253,7 @@
             
             if (isNew) {
                 // Remove the NEW badge when the user clicks anywhere on the card
-                card.addEventListener('click', () => markAsSeen(opp.Enlace, card), { once: true });
+                card.addEventListener('click', () => markAsSeen(opp.url, card), { once: true });
             }
             
             return card;
@@ -324,15 +321,12 @@
         };
 
         const fetchData = async () => {
-            const btn = document.getElementById('refresh-btn');
-            btn.classList.add('spin');
-            
             // Get slider value
             const maxPriceStr = document.getElementById('price-slider').value;
             const maxPrice = parseFloat(maxPriceStr);
             
             try {
-                const res = await fetch('https://wnoiyxgdbemamajebqom.supabase.co/rest/v1/listings?select=*', {
+                const res = await fetch('https://wnoiyxgdbemamajebqom.supabase.co/rest/v1/listings?select=*&limit=3000', {
                     headers: {
                         'apikey': 'sb_publishable_VCnH38uDOJvfet7bJHRnAw_9VZaDSmp',
                         'Authorization': 'Bearer sb_publishable_VCnH38uDOJvfet7bJHRnAw_9VZaDSmp'
@@ -354,32 +348,32 @@
                     // Client-side visual filtering based on active brands and platforms
                     if (currentConfig && currentConfig.brands) {
                         opps = opps.filter(o => {
-                            const brandName = o.Modelo.split(' ')[0];
+                            const brandName = (o.modelo || '').split(' ')[0];
                             const isBrandActive = currentConfig.brands[brandName] === true;
-                            const isPlatformActive = selectedPlatforms.includes(o.Plataforma || 'Kleinanzeigen');
+                            const isPlatformActive = selectedPlatforms.includes(o.plataforma || 'Kleinanzeigen');
                             return isBrandActive && isPlatformActive;
                         });
                     } else {
                         // Just filter platforms if config brands somehow empty
-                        opps = opps.filter(o => selectedPlatforms.includes(o.Plataforma || 'Kleinanzeigen'));
+                        opps = opps.filter(o => selectedPlatforms.includes(o.plataforma || 'Kleinanzeigen'));
                     }
                     
                     // Filter by max price 
                     opps = opps.filter(o => {
-                        const listedPrice = parseFloat(o['Precio URL']);
+                        const listedPrice = parseFloat(o.precio);
                         return !isNaN(listedPrice) && listedPrice <= maxPrice;
                     });
                     
                     // Apply sorting
                     const sortVal = document.getElementById('price-sort').value;
                     if (sortVal === 'price-asc') {
-                        opps.sort((a, b) => parseFloat(a['Precio URL']) - parseFloat(b['Precio URL']));
+                        opps.sort((a, b) => parseFloat(a.precio) - parseFloat(b.precio));
                     } else if (sortVal === 'price-desc') {
-                        opps.sort((a, b) => parseFloat(b['Precio URL']) - parseFloat(a['Precio URL']));
+                        opps.sort((a, b) => parseFloat(b.precio) - parseFloat(a.precio));
                     } else if (sortVal === 'save-desc') {
                         opps.sort((a, b) => {
-                            const saveA = parseFloat(a['Ahorro %'].replace('%', ''));
-                            const saveB = parseFloat(b['Ahorro %'].replace('%', ''));
+                            const saveA = parseFloat(String(a.ahorro_porcentaje || '0').replace('%', ''));
+                            const saveB = parseFloat(String(b.ahorro_porcentaje || '0').replace('%', ''));
                             return saveB - saveA;
                         });
                     }
@@ -387,7 +381,7 @@
                     // Count brands based on ALL data to show correct numbers even if filtered out
                     const brandCounts = {};
                     (result || []).forEach(o => {
-                        const brandName = (o.Modelo || 'Unknown').split(' ')[0];
+                        const brandName = (o.modelo || 'Unknown').split(' ')[0];
                         brandCounts[brandName] = (brandCounts[brandName] || 0) + 1;
                     });
                     
@@ -407,7 +401,7 @@
                         let totalAhorro = 0;
                         opps.forEach(opp => {
                             grid.appendChild(createCard(opp));
-                            totalAhorro += parseFloat(opp['Ahorro %'].replace('%', ''));
+                            totalAhorro += parseFloat(String(opp.ahorro_porcentaje || '0').replace('%', ''));
                         });
                         document.getElementById('avg-margin').textContent = (totalAhorro / opps.length).toFixed(1) + '%';
                         lucide.createIcons();
@@ -425,8 +419,6 @@
                 }
             } catch (err) {
                 console.error("Error fetching data:", err);
-            } finally {
-                setTimeout(() => btn.classList.remove('spin'), 500);
             }
         };
 
@@ -448,27 +440,6 @@
             fetchData();
         });
 
-        // Fetch Bot status logic
-        const fetchStatus = async () => {
-             try {
-                 const res = await fetch('/api/status');
-                 const result = await res.json();
-                 if (result.status === 'success') {
-                     const data = result.data;
-                     const container = document.getElementById('bot-progress-container');
-                     
-                     if (data.state === 'scanning') {
-                         container.style.display = 'block';
-                         document.getElementById('bot-progress-fill').style.width = `${data.progress}%`;
-                         document.getElementById('bot-progress-percent').textContent = `${data.progress}%`;
-                         document.getElementById('bot-status-text').textContent = `🔍 Scanning: ${data.model}`;
-                     } else {
-                         container.style.display = 'none';
-                     }
-                 }
-             } catch(e) {}
-        };
-
         const updateAllFilters = async (value) => {
             if (!currentConfig || !currentConfig.brands) return;
             Object.keys(currentConfig.brands).forEach(b => currentConfig.brands[b] = value);
@@ -489,23 +460,9 @@
         // Initial load and auto-refresh intervals
         fetchConfig().then(() => fetchData());
         setInterval(fetchData, 45000); // 45s for opportunities
-        setInterval(fetchStatus, 3000); // 3s for live loading bar
+        
         document.getElementById('price-sort').addEventListener('change', () => {
             fetchData();
-        });
-
-        fetchStatus();
-
-        document.getElementById('refresh-btn').addEventListener('click', async () => {
-            fetchData(); // Update UI data immediately
-            try {
-                await fetch('/api/trigger_search', { method: 'POST' });
-                // Show visual feedback
-                const toast = document.getElementById('toast');
-                toast.textContent = '🚀 Search Triggered!';
-                toast.classList.add('show');
-                setTimeout(() => toast.classList.remove('show'), 2000);
-            } catch(e) {}
         });
     </script>
 </body>
