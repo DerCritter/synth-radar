@@ -304,7 +304,7 @@ def scrape_all_platforms():
             locale="de-DE",
         )
         # Patch navigator.webdriver API
-        context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+        
         page = context.new_page()
 
         try:
