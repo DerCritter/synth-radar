@@ -348,7 +348,7 @@
                     <a href="${getAffiliateUrl(opp.reverb || '#', 'Reverb')}" target="_blank" class="btn btn-reverb" title="See Reverb prices">
                         <i data-lucide="bar-chart-2"></i> Reverb
                     </a>
-                    <button class="btn btn-secondary copy-btn" data-draft="${encodeURIComponent(opp['Mensaje Borrador'] || '')}">
+                    <button class="btn btn-secondary copy-btn" data-draft="${encodeURIComponent(opp.mensaje_borrador || '')}">
                         <i data-lucide="copy"></i> Draft
                     </button>
                 </div>
@@ -452,7 +452,7 @@
             const maxPrice = parseFloat(maxPriceStr);
             
             try {
-                const res = await fetch('https://wnoiyxgdbemamajebqom.supabase.co/rest/v1/listings?select=modelo,estado,precio,precio_mercado,ahorro_porcentaje,plataforma,url,imagen,reverb,Mensaje%20Borrador,last_seen,fecha_agregado&limit=3000', {
+                const res = await fetch('https://wnoiyxgdbemamajebqom.supabase.co/rest/v1/listings?select=modelo,estado,precio,precio_mercado,ahorro_porcentaje,plataforma,url,imagen,reverb,mensaje_borrador,last_seen,fecha_agregado&limit=3000', {
                     headers: {
                         'apikey': 'sb_publishable_VCnH38uDOJvfet7bJHRnAw_9VZaDSmp',
                         'Authorization': 'Bearer sb_publishable_VCnH38uDOJvfet7bJHRnAw_9VZaDSmp'
