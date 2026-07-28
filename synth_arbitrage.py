@@ -449,10 +449,10 @@ def scrape_thomann_bstock():
                 stealth_sync(page)
                 
             # Thomann Synths B-Stock URL
-            url = 'https://www.thomann.de/es/sintetizadores_teclados_b_stock.html'
+            url = 'https://www.thomann.de/de/blowouts_GF_synthesizer.html'
             
             time.sleep(random.uniform(2.0, 5.0))
-            page.goto(url, wait_until='domcontentloaded', timeout=20000)
+            page.goto(url, wait_until='domcontentloaded', timeout=30000)
             time.sleep(random.uniform(3.0, 6.0))
             
             page.mouse.move(random.randint(100, 500), random.randint(100, 500))
@@ -461,36 +461,25 @@ def scrape_thomann_bstock():
             
             soup = BeautifulSoup(page.content(), 'html.parser')
             # Find product cards
-            cards = soup.find_all('div', class_=lambda c: c and 'product-list__item' in c)
+            cards = soup.find_all('a', class_=lambda c: c and 'fx-product-box' in c)
             
             logging.info(f'[Thomann B-Stock] Encontrados {len(cards)} anuncios.')
             
             for card in cards:
-                title_el = card.find('div', class_='title')
+                title_el = card.find('div', class_='description')
                 if not title_el:
-                    title_el = card.find('span', class_='title__manufacturer')
-                    if not title_el:
-                        continue
+                    continue
                 
-                title = title_el.text.strip()
-                name_el = card.find('span', class_='title__name')
-                if name_el:
-                    title += " " + name_el.text.strip()
+                title = title_el.text.strip().replace('
+', ' ')
                     
-                price_el = card.find('div', class_='product__price')
+                price_el = card.find('span', class_='price__primary')
                 if not price_el:
                     continue
                 
-                link_el = card.find('a', class_='product__content')
-                if not link_el:
-                    link_el = card.find('a')
-                
-                if not link_el:
-                    continue
-                    
-                link = link_el.get('href')
+                link = card.get('href')
                 if link and not link.startswith('http'):
-                    link = 'https://www.thomann.de' + link
+                    link = 'https://www.thomann.de/de/' + link
                     
                 price_str = price_el.text.strip()
                 price = extract_price(price_str)
@@ -498,11 +487,16 @@ def scrape_thomann_bstock():
                 img_el = card.find('picture')
                 img_url = ''
                 if img_el:
-                    img_src = img_el.find('img')
-                    if img_src:
-                        img_url = img_src.get('src')
-                        if img_url and not img_url.startswith('http'):
-                            img_url = 'https://www.thomann.de' + img_url
+                    source = img_el.find('source', type=lambda t: t != 'image/webp')
+                    if source and source.get('data-srcset'):
+                        img_url = source.get('data-srcset').split(',')[0].strip().split(' ')[0]
+                    else:
+                        img_src = img_el.find('img')
+                        if img_src:
+                            img_url = img_src.get('data-src') or img_src.get('src')
+                
+                if img_url and not img_url.startswith('http'):
+                    img_url = 'https://www.thomann.de' + img_url
                 
                 # Verify if it's one of our target brands
                 brand_match = False
@@ -512,8 +506,6 @@ def scrape_thomann_bstock():
                         break
                         
                 if brand_match:
-                    # Treat B-Stock as "B-Stock" condition
-                    # To analyze, we mock the logic
                     analysis = analyze_listing(title, "B-Stock from Thomann", price, link, img_url, source='Thomann B-Stock')
                     if analysis:
                         analysis['estado'] = 'B-Stock / Oficial'
