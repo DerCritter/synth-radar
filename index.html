@@ -3,7 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Synth Arbitrage Radar</title>
+    <title>SynthRadar - Encuentra Chollos de Sintetizadores en Europa</title>
+    <meta name="description" content="Monitorizamos eBay y Kleinanzeigen para encontrar las mejores ofertas y chollos de sintetizadores en Europa.">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="SynthRadar - Encuentra Chollos de Sintetizadores en Europa">
+    <meta property="og:description" content="Monitorizamos eBay y Kleinanzeigen para encontrar las mejores ofertas y chollos de sintetizadores en Europa.">
+    <meta property="og:image" content="https://via.placeholder.com/1200x630.png?text=SynthRadar">
+    <meta property="og:url" content="https://synthradar.com">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SynthRadar - Encuentra Chollos de Sintetizadores en Europa">
+    <meta name="twitter:description" content="Monitorizamos eBay y Kleinanzeigen para encontrar las mejores ofertas y chollos de sintetizadores en Europa.">
+    <meta name="twitter:image" content="https://via.placeholder.com/1200x630.png?text=SynthRadar">
+
+    <!-- Google Analytics 4 (REPLACE 'G-XXXXXXXXXX' WITH YOUR ACTUAL GA4 MEASUREMENT ID) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
@@ -351,6 +375,9 @@
                     <button class="btn btn-secondary copy-btn" data-draft="${encodeURIComponent(opp.mensaje_borrador || '')}">
                         <i data-lucide="copy"></i> Draft
                     </button>
+                    <button class="btn btn-secondary share-btn" data-title="SynthRadar: ${opp.modelo}" data-url="${opp.url}">
+                        <i data-lucide="share-2"></i> Share
+                    </button>
                 </div>
             `;
             
@@ -359,6 +386,25 @@
             copyBtn.addEventListener('click', (e) => {
                 const draft = decodeURIComponent(e.currentTarget.getAttribute('data-draft'));
                 copyToClipboard(draft, copyBtn);
+            });
+            
+            const shareBtn = card.querySelector('.share-btn');
+            shareBtn.addEventListener('click', async (e) => {
+                const title = e.currentTarget.getAttribute('data-title');
+                const url = e.currentTarget.getAttribute('data-url');
+                
+                if (navigator.share) {
+                    try {
+                        await navigator.share({
+                            title: title,
+                            url: url
+                        });
+                    } catch (err) {
+                        console.error('Error sharing', err);
+                    }
+                } else {
+                    copyToClipboard(url, shareBtn);
+                }
             });
             
             if (isNew) {
