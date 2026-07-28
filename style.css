@@ -2,16 +2,16 @@
     /* Slate/Zinc Dark Mode Palette */
     --bg-color: #09090b; /* zinc-950 */
     --card-bg: rgba(24, 24, 27, 0.65); /* zinc-900 with opacity */
-    --border-color: rgba(255, 255, 255, 0.06);
-    --border-highlight: rgba(255, 255, 255, 0.12);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --border-highlight: rgba(255, 255, 255, 0.2);
     --text-primary: #f4f4f5; /* zinc-100 */
     --text-secondary: #a1a1aa; /* zinc-400 */
     --accent: #38bdf8; /* sky-400 */
     --accent-glow: rgba(56, 189, 248, 0.3);
     --success: #34d399; /* emerald-400 */
     --warning: #f43f5e; /* rose-500 */
-    --font-heading: 'Outfit', sans-serif;
-    --font-body: 'Inter', sans-serif;
+    --font-heading: 'Outfit', system-ui, -apple-system, sans-serif;
+    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 * {
@@ -72,7 +72,7 @@ body {
     flex-shrink: 0;
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 24px;
+    border-radius: 12px;
     padding: 1.75rem;
     height: fit-content;
     backdrop-filter: blur(20px);
@@ -216,7 +216,7 @@ body {
 .progress-container {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 16px;
+    border-radius: 12px;
     padding: 1.25rem 1.75rem;
     margin-bottom: 2.5rem;
     backdrop-filter: blur(20px);
@@ -336,7 +336,7 @@ body {
 .metric-card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 20px;
+    border-radius: 12px;
     padding: 1.75rem;
     display: flex;
     align-items: center;
@@ -381,7 +381,7 @@ body {
 /* Grid layout */
 .opportunities-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
     gap: 2rem;
 }
 
@@ -389,7 +389,7 @@ body {
 .opp-card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
-    border-radius: 24px;
+    border-radius: 12px;
     padding: 1.75rem;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -413,7 +413,7 @@ body {
     position: relative;
     width: calc(100% + 3.5rem);
     margin: -1.75rem -1.75rem 1.5rem;
-    border-radius: 24px 24px 0 0;
+    border-radius: 12px 12px 0 0;
     overflow: hidden;
     height: 200px;
     background: #000;
@@ -621,7 +621,7 @@ body {
     padding: 5rem 2rem;
     background: rgba(24, 24, 27, 0.4);
     border: 1px dashed var(--border-color);
-    border-radius: 24px;
+    border-radius: 12px;
     text-align: center;
 }
 
@@ -874,4 +874,42 @@ body {
     .header-right { width: 100%; justify-content: space-between; }
     .card-actions { flex-direction: column; }
     .overview { grid-template-columns: 1fr; }
+}
+
+/* Skeleton Loader */
+.skeleton-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.75rem;
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+.skeleton-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    animation: shimmer 1.5s infinite;
+    z-index: 1;
+}
+.skeleton-img {
+    height: 200px;
+    width: calc(100% + 3.5rem);
+    margin: -1.75rem -1.75rem 1.5rem;
+    border-radius: 12px 12px 0 0;
+    background: rgba(255, 255, 255, 0.03);
+}
+.skeleton-text {
+    height: 1.2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
 }

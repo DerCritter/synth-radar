@@ -172,11 +172,24 @@
         </section>
 
         <section class="opportunities-grid" id="grid">
-            <!-- Cards will be injected here via JS -->
-            <div class="empty-state">
-                <i data-lucide="search" class="empty-icon"></i>
-                <p>No new opportunities detected in the latest scan.</p>
-                <span>The bot is running in the background.</span>
+            <!-- Skeleton cards shown on load -->
+            <div class="skeleton-card">
+                <div class="skeleton-img"></div>
+                <div class="skeleton-text" style="width: 70%;"></div>
+                <div class="skeleton-text" style="width: 40%;"></div>
+                <div class="skeleton-text" style="width: 100%; height: 3rem; margin-top: 1rem;"></div>
+            </div>
+            <div class="skeleton-card">
+                <div class="skeleton-img"></div>
+                <div class="skeleton-text" style="width: 70%;"></div>
+                <div class="skeleton-text" style="width: 40%;"></div>
+                <div class="skeleton-text" style="width: 100%; height: 3rem; margin-top: 1rem;"></div>
+            </div>
+            <div class="skeleton-card">
+                <div class="skeleton-img"></div>
+                <div class="skeleton-text" style="width: 70%;"></div>
+                <div class="skeleton-text" style="width: 40%;"></div>
+                <div class="skeleton-text" style="width: 100%; height: 3rem; margin-top: 1rem;"></div>
             </div>
         </section>
         </main>
@@ -439,7 +452,7 @@
             const maxPrice = parseFloat(maxPriceStr);
             
             try {
-                const res = await fetch('https://wnoiyxgdbemamajebqom.supabase.co/rest/v1/listings?select=*&limit=3000', {
+                const res = await fetch('https://wnoiyxgdbemamajebqom.supabase.co/rest/v1/listings?select=modelo,estado,precio,precio_mercado,ahorro_porcentaje,plataforma,url,imagen,reverb,Mensaje%20Borrador,last_seen,fecha_agregado&limit=3000', {
                     headers: {
                         'apikey': 'sb_publishable_VCnH38uDOJvfet7bJHRnAw_9VZaDSmp',
                         'Authorization': 'Bearer sb_publishable_VCnH38uDOJvfet7bJHRnAw_9VZaDSmp'
@@ -626,6 +639,15 @@
                 }
             } catch (err) {
                 console.error("Error fetching data:", err);
+                const grid = document.getElementById('grid');
+                grid.innerHTML = `
+                    <div class="empty-state" style="border-color: var(--warning);">
+                        <i data-lucide="alert-triangle" class="empty-icon" style="color: var(--warning);"></i>
+                        <p>Error loading data.</p>
+                        <span>Please try again later.</span>
+                    </div>
+                `;
+                lucide.createIcons();
             }
         };
 
