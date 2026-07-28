@@ -433,6 +433,91 @@ def scrape_all_platforms():
             browser.close()
 
 
+def scrape_thomann_bstock():
+    logging.info('Iniciando escaneo de Thomann B-Stock (Stealth)...')
+    results = []
+    
+    try:
+        from playwright_stealth import stealth_sync
+    except ImportError:
+        stealth_sync = None
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        try:
+            context = browser.new_context(viewport={'width': 1280, 'height': 800}, locale='de-DE')
+            page = context.new_page()
+            if stealth_sync:
+                stealth_sync(page)
+                
+            # Thomann Synths B-Stock URL
+            url = 'https://www.thomann.de/de/blowouts_GF_synthesizer.html'
+            
+            time.sleep(random.uniform(2.0, 5.0))
+            page.goto(url, wait_until='domcontentloaded', timeout=30000)
+            time.sleep(random.uniform(3.0, 6.0))
+            
+            page.mouse.move(random.randint(100, 500), random.randint(100, 500))
+            page.mouse.wheel(0, random.randint(300, 800))
+            time.sleep(random.uniform(1.0, 2.0))
+            
+            soup = BeautifulSoup(page.content(), 'html.parser')
+            # Find product cards
+            cards = soup.find_all('a', class_=lambda c: c and 'fx-product-box' in c)
+            
+            logging.info(f'[Thomann B-Stock] Encontrados {len(cards)} anuncios.')
+            
+            for card in cards:
+                title_el = card.find('div', class_='description')
+                if not title_el:
+                    continue
+                
+                title = title_el.text.strip().replace('\\n', ' ')
+                    
+                price_el = card.find('span', class_='price__primary')
+                if not price_el:
+                    continue
+                
+                link = card.get('href')
+                if link and not link.startswith('http'):
+                    link = 'https://www.thomann.de/de/' + link
+                    
+                price_str = price_el.text.strip()
+                price = extract_price(price_str)
+                
+                img_el = card.find('picture')
+                img_url = ''
+                if img_el:
+                    source = img_el.find('source', type=lambda t: t != 'image/webp')
+                    if source and source.get('data-srcset'):
+                        img_url = source.get('data-srcset').split(',')[0].strip().split(' ')[0]
+                    else:
+                        img_src = img_el.find('img')
+                        if img_src:
+                            img_url = img_src.get('data-src') or img_src.get('src')
+                
+                if img_url and not img_url.startswith('http'):
+                    img_url = 'https://www.thomann.de' + img_url
+                
+                # Verify if it's one of our target brands
+                brand_match = False
+                for b in TARGET_BRANDS:
+                    if b.lower() in title.lower():
+                        brand_match = True
+                        break
+                        
+                if brand_match:
+                    analysis = analyze_listing(title, "B-Stock from Thomann", price, link, img_url, source='Thomann B-Stock')
+                    if analysis:
+                        analysis['estado'] = 'B-Stock / Oficial'
+                        results.append(analysis)
+                        
+        except Exception as e:
+            logging.error(f'Error en Thomann B-Stock: {e}')
+        finally:
+            browser.close()
+            
+    return results
 
 def main():
     print("🤖 Iniciando Bot Experto en Arbitraje de Sintetizadores (Cloud Version)...")
