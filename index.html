@@ -82,11 +82,7 @@
                     <span class="filter-name">eBay</span>
                     <div class="checkbox-indicator"></div>
                 </label>
-                <label class="filter-item">
-                    <input type="checkbox" class="filter-cb platform-cb" data-platform="Thomann B-Stock" checked>
-                    <span class="filter-name">Thomann B-Stock</span>
-                    <div class="checkbox-indicator"></div>
-                </label>
+                
             </div>
 
             <div class="sidebar-header" style="margin-top: 2.5rem;">
@@ -194,7 +190,10 @@
             EBAY_CAMPID: "TU_EBAY_ID_AQUI", 
             
             // Your Reverb Affiliate ID/URL structure
-            REVERB_AFFILIATE_ID: "TU_REVERB_ID_AQUI" 
+            REVERB_AFFILIATE_ID: "TU_REVERB_ID_AQUI",
+            
+            // Your Thomann Affiliate ID (e.g. "123456")
+            THOMANN_AFFILIATE_ID: "TU_THOMANN_ID_AQUI"
         };
 
         // Helper function to inject affiliate tracking into URLs
@@ -209,10 +208,13 @@
             }
             
             if (platform === 'Reverb' && AFFILIATE_CONFIG.REVERB_AFFILIATE_ID !== "TU_REVERB_ID_AQUI") {
-                // Partnerize Reverb format (depends on exact Reverb affiliate link structure)
-                // Assuming it's an appended param for now:
                 const separator = originalUrl.includes('?') ? '&' : '?';
                 return `${originalUrl}${separator}awc=${AFFILIATE_CONFIG.REVERB_AFFILIATE_ID}`;
+            }
+            
+            if (platform === 'Thomann' && AFFILIATE_CONFIG.THOMANN_AFFILIATE_ID !== "TU_THOMANN_ID_AQUI") {
+                const separator = originalUrl.includes('?') ? '&' : '?';
+                return `${originalUrl}${separator}ar=${AFFILIATE_CONFIG.THOMANN_AFFILIATE_ID}`;
             }
             
             return originalUrl;
@@ -446,7 +448,9 @@
                     const grid = document.getElementById('grid');
                     grid.innerHTML = ''; // Clear current
                     
-                    let opps = result || [];
+                                        let allResults = result || [];
+                    let bStockAds = allResults.filter(o => o.plataforma === 'Thomann B-Stock');
+                    let opps = allResults.filter(o => o.plataforma !== 'Thomann B-Stock');
 
                     // Initialize config with dynamic brands from data if first load
                     if (!currentConfig || Object.keys(currentConfig.brands || {}).length === 0) {
@@ -520,7 +524,7 @@
                     
                     // Count brands based on ALL data to show correct numbers even if filtered out
                     const brandCounts = {};
-                    (result || []).forEach(o => {
+                    opps.forEach(o => {
                         const brandName = (o.modelo || 'Unknown').split(' ')[0];
                         brandCounts[brandName] = (brandCounts[brandName] || 0) + 1;
                     });
@@ -539,30 +543,67 @@
                     
                     if (opps.length > 0) {
                         let totalAhorro = 0;
-                        let adCounter = 0;
+                        let bStockIndex = 0;
                         opps.forEach((opp, index) => {
                             grid.appendChild(createCard(opp));
                             totalAhorro += parseFloat(String(opp.ahorro_porcentaje || '0').replace('%', ''));
                             
-                            // Inyectar 2 anuncios cada 12 items
+                            // Inyectar 2 anuncios de Thomann B-Stock cada 12 items
                             if ((index + 1) % 12 === 0) {
                                 for(let i=0; i<2; i++) {
-                                    const adCard = document.createElement('div');
-                                    adCard.className = 'card ad-card';
-                                    adCard.style.border = '1px dashed rgba(255, 255, 255, 0.2)';
-                                    adCard.style.display = 'flex';
-                                    adCard.style.flexDirection = 'column';
-                                    adCard.style.justifyContent = 'center';
-                                    adCard.style.alignItems = 'center';
-                                    adCard.style.textAlign = 'center';
-                                    adCard.style.padding = '2rem';
-                                    adCard.style.background = 'rgba(255, 255, 255, 0.03)';
-                                    adCard.innerHTML = `
-                                        <i data-lucide="shopping-cart" style="width: 32px; height: 32px; opacity: 0.5; margin-bottom: 1rem; color: #94a3b8;"></i>
-                                        <h3 style="margin: 0; font-size: 1.1rem; color: #f8fafc;">Promoted / Ad Space</h3>
-                                        <p style="color: #94a3b8; font-size: 0.9rem; margin-top: 0.5rem;">Pega tu código HTML del banner afiliado aquí.</p>
-                                    `;
-                                    grid.appendChild(adCard);
+                                    if (bStockIndex < bStockAds.length) {
+                                        const adData = bStockAds[bStockIndex++];
+                                        const adCard = document.createElement('div');
+                                        adCard.className = 'card ad-card';
+                                        adCard.style.border = '1px solid rgba(5, 150, 105, 0.4)';
+                                        adCard.style.display = 'flex';
+                                        adCard.style.flexDirection = 'column';
+                                        adCard.style.justifyContent = 'space-between';
+                                        adCard.style.alignItems = 'center';
+                                        adCard.style.textAlign = 'center';
+                                        adCard.style.padding = '1.5rem';
+                                        adCard.style.background = 'linear-gradient(145deg, rgba(5,150,105,0.05) 0%, rgba(5,150,105,0.15) 100%)';
+                                        adCard.style.position = 'relative';
+                                        adCard.style.overflow = 'hidden';
+                                        
+                                        adCard.innerHTML = `
+                                            <div style="background:#059669; color:white; padding: 3px 10px; border-radius: 4px; font-size: 0.7rem; font-weight:800; letter-spacing: 1px; margin-bottom: 1rem; width: max-content; margin-left: auto; margin-right: auto; text-transform: uppercase; box-shadow: 0 4px 12px rgba(5,150,105,0.3);">
+                                                Thomann B-Stock Deal
+                                            </div>
+                                            <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; width: 100%; min-height: 120px;">
+                                                ${adData.imagen ? `<img src="${adData.imagen}" style="max-height: 140px; max-width: 100%; object-fit: contain;" onerror="this.style.display='none'" />` : '<i data-lucide="music" style="width: 48px; height: 48px; opacity: 0.2;"></i>'}
+                                            </div>
+                                            <div style="width: 100%; margin-top: 1rem;">
+                                                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.05rem; color: #f8fafc; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.3;">
+                                                    ${adData.modelo || 'Sintetizador'}
+                                                </h3>
+                                                <div style="font-size: 1.4rem; font-weight: 800; color: #34d399; margin-bottom: 1rem;">
+                                                    €${adData.precio}
+                                                </div>
+                                                <a href="${getAffiliateUrl(adData.url, 'Thomann')}" target="_blank" style="display: block; background: #059669; color: white; padding: 0.75rem 1rem; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem; width: 100%; box-sizing: border-box; transition: all 0.2s; cursor: pointer;">
+                                                    Ver en Thomann
+                                                </a>
+                                            </div>
+                                        `;
+                                        grid.appendChild(adCard);
+                                    } else {
+                                        // Fallback if we run out of B-Stock items (empty generic slot)
+                                        const adCard = document.createElement('div');
+                                        adCard.className = 'card ad-card';
+                                        adCard.style.border = '1px dashed rgba(255, 255, 255, 0.1)';
+                                        adCard.style.display = 'flex';
+                                        adCard.style.flexDirection = 'column';
+                                        adCard.style.justifyContent = 'center';
+                                        adCard.style.alignItems = 'center';
+                                        adCard.style.textAlign = 'center';
+                                        adCard.style.padding = '2rem';
+                                        adCard.style.background = 'rgba(255, 255, 255, 0.02)';
+                                        adCard.innerHTML = `
+                                            <i data-lucide="zap" style="width: 32px; height: 32px; opacity: 0.3; margin-bottom: 1rem; color: #94a3b8;"></i>
+                                            <p style="color: #64748b; font-size: 0.85rem; margin: 0;">Espacio Patrocinado</p>
+                                        `;
+                                        grid.appendChild(adCard);
+                                    }
                                 }
                             }
                         });
