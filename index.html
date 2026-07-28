@@ -82,6 +82,11 @@
                     <span class="filter-name">eBay</span>
                     <div class="checkbox-indicator"></div>
                 </label>
+                <label class="filter-item">
+                    <input type="checkbox" class="filter-cb platform-cb" data-platform="Thomann B-Stock" checked>
+                    <span class="filter-name">Thomann B-Stock</span>
+                    <div class="checkbox-indicator"></div>
+                </label>
                 
             </div>
 
@@ -450,7 +455,8 @@
                     
                                         let allResults = result || [];
                     let bStockAds = allResults.filter(o => o.plataforma === 'Thomann B-Stock');
-                    let opps = allResults.filter(o => o.plataforma !== 'Thomann B-Stock');
+                    // Restauramos opps para que incluya todos los resultados (y responda a los checkboxes)
+                    let opps = allResults;
 
                     // Initialize config with dynamic brands from data if first load
                     if (!currentConfig || Object.keys(currentConfig.brands || {}).length === 0) {
