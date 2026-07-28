@@ -250,7 +250,9 @@ def analyze_listing(title, description, price, url, image_url="", source="Kleina
     
     opportunity = None
     # Lógica de negocio (40% de ahorro mínimo en defectuosos, 20% en funcionales)
-    if is_defekt and discount >= 0.40:
+    if source == 'Thomann B-Stock':
+        opportunity = "Thomann B-Stock Deal"
+    elif is_defekt and discount >= 0.40:
         opportunity = "Gran Margen Defecto"
     elif not is_defekt and discount >= 0.20:
         opportunity = "Buen Precio Funcional"
