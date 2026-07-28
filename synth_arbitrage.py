@@ -18,6 +18,21 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # La lista de modelos ahora se carga dinámicamente desde config.json
 # basado en MARKET_VALUES
 
+JUNK_KEYWORDS = [
+    "case", "flightcase", "cover", "dust", "decksaver", "manual", "anleitung", 
+    "knob", "fader", "pot", "psu", "power supply", "netzteil", "cable", "kabel", 
+    "stand", "ständer", "gigbag", "bag", "tasche", "box", "ovp", "box only", 
+    "decal", "sticker"
+]
+
+ACCESSORY_KEYWORDS = [
+    "cartridge", "memory", "ram", "rom", "card", "pedal", "expansion"
+]
+
+DEFECTIVE_KEYWORDS = [
+    "defekt", "bastler", "parts", "repair", "reparieren"
+]
+
 CONDITION_DEFEKT = ["defekt", "bastler", "ersatzteile", "reparaturbedürftig", "dachbodenfund", "teildefekt"]
 CONDITION_MINT = ["mint", "neuwertig", "wie neu", "sammlerzustand", "makellos", "perfekt"]
 CONDITION_POOR = ["gebrauchsspuren", "kratzer", "dellen", "mängel", "abnutzung", "worn"]
@@ -191,6 +206,10 @@ def analyze_listing(title, description, price, url, image_url="", source="Kleina
     desc_lower = description.lower()
     
     # 1. Filtro de descarte (Anuncios de "Busco", accesorios, re-ediciones modernas, manuales, etc.)
+    for junk in JUNK_KEYWORDS:
+        if re.search(rf"\b{re.escape(junk)}\b", title_lower):
+            return None
+
     # Exigir límites de palabra usando RegEx para evitar que "ministry" filtre "mini" por error
     for ignore in CONDITION_IGNORE:
         if re.search(rf"\b{ignore}\b", title_lower):
@@ -226,7 +245,7 @@ def analyze_listing(title, description, price, url, image_url="", source="Kleina
         return None
 
     # 3. Determinar estado base (Defecto/Piezas vs Funcional)
-    is_defekt = any(kw in title_lower or kw in desc_lower for kw in CONDITION_DEFEKT)
+    is_defekt = any(kw in title_lower or kw in desc_lower for kw in CONDITION_DEFEKT) or any(kw in title_lower for kw in DEFECTIVE_KEYWORDS)
     is_mint = any(kw in title_lower or kw in desc_lower for kw in CONDITION_MINT)
     is_poor = any(kw in title_lower or kw in desc_lower for kw in CONDITION_POOR)
     
@@ -259,6 +278,8 @@ def analyze_listing(title, description, price, url, image_url="", source="Kleina
         opportunity = "Buen Precio Funcional"
         
     if opportunity:
+        is_accessory = any(kw in title_lower for kw in ACCESSORY_KEYWORDS)
+        
         condition_label = "Funcional (Average)"
         if is_defekt:
             condition_label = "Defekt/Bastler"
@@ -266,6 +287,12 @@ def analyze_listing(title, description, price, url, image_url="", source="Kleina
             condition_label = "Funcional (Mint)"
         elif is_poor:
             condition_label = "Funcional (Gebrauchsspuren)"
+
+        discount_str = f"{int(discount*100)}%"
+
+        if is_accessory:
+            condition_label = "Accesorio / " + condition_label
+            discount_str = "0%"
 
         # Generar Borrador de Mensaje en Alemán
         if is_defekt:
@@ -278,7 +305,7 @@ def analyze_listing(title, description, price, url, image_url="", source="Kleina
             "Estado": condition_label,
             "Precio URL": price,
             "Precio Mercado": f"{int(market_low)} - {int(market_high)} €",
-            "Ahorro %": f"{int(discount*100)}%",
+            "Ahorro %": discount_str,
             "Plataforma": source,
             "Enlace": url,
             "Imagen": image_url,
