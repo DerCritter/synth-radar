@@ -470,8 +470,7 @@ def scrape_thomann_bstock():
                 if not title_el:
                     continue
                 
-                title = title_el.text.strip().replace('
-', ' ')
+                title = title_el.text.strip().replace('\\n', ' ')
                     
                 price_el = card.find('span', class_='price__primary')
                 if not price_el:
