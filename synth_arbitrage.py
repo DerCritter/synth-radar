@@ -1,3 +1,4 @@
+import asyncio
 import random
 import time
 import logging
@@ -9,7 +10,7 @@ import tempfile
 from supabase_client import SupabaseDB
 from datetime import datetime
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
 from tabulate import tabulate
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -287,242 +288,254 @@ def analyze_listing(title, description, price, url, image_url="", source="Kleina
         }
     return None
 
-def scrape_all_platforms():
-    logging.info('Iniciando escaneo en kleinanzeigen.de y ebay.de con Playwright (STEALTH MODE)...')
+async def scrape_kleinanzeigen_brand(brand, browser, major_brands, seen_links, stealth_async, semaphore):
     results = []
-    
-    # Importar stealth aquí para no romper si no está instalado globalmente
-    try:
-        from playwright_stealth import stealth_sync
-    except ImportError:
-        stealth_sync = None
-
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+    async with semaphore:
+        logging.info(f'--- Iniciando escaneo de marca: {brand} (Kleinanzeigen) ---')
+        context = await browser.new_context(viewport={'width': 1280, 'height': 800}, locale='de-DE')
+        page = await context.new_page()
         
-        try:
-            seen_links = set()
-            major_brands = ['Roland', 'Korg', 'Yamaha', 'Akai', 'Elektron']
-            
-            # Kleinanzeigen con Amnesia (Contexto por Marca) y Stealth
-            for brand in TARGET_BRANDS:
-                logging.info(f'--- Iniciando escaneo de marca: {brand} ---')
-                # Amnesia: Nuevo contexto para cada marca
-                context = browser.new_context(viewport={'width': 1280, 'height': 800}, locale='de-DE')
-                page = context.new_page()
+        if stealth_async:
+            await stealth_async(page)
+
+        queries = []
+        queries.append((f'{brand}-synthesizer', 2 if brand in major_brands else 1))
+        queries.append((f'{brand}-synth', 1))
+        queries.append((f'{brand}-drum-machine', 1))
+        queries.append((f'{brand}-groovebox', 1))
+        queries.append((f'{brand}-sampler', 1))
+        queries.append((f'{brand}-sequencer', 1))
+        queries.append((f'{brand}-module', 1))
+        if brand not in ['Yamaha', 'Casio', 'Hohner']:
+            queries.append((f'{brand}-eurorack', 1))
+
+        for (base_query, pages) in queries:
+            for page_num in range(1, pages + 1):
+                search_display = base_query.replace('-', ' ').title()
+                if page_num == 1:
+                    url = f'https://www.kleinanzeigen.de/s-musikinstrumente/{base_query}/k0c74'
+                else:
+                    url = f'https://www.kleinanzeigen.de/s-musikinstrumente/seite:{page_num}/{base_query}/k0c74'
                 
-                if stealth_sync:
-                    stealth_sync(page)
-
-                queries = []
-                queries.append((f'{brand}-synthesizer', 2 if brand in major_brands else 1))
-                queries.append((f'{brand}-synth', 1))
-                queries.append((f'{brand}-drum-machine', 1))
-                queries.append((f'{brand}-groovebox', 1))
-                queries.append((f'{brand}-sampler', 1))
-                queries.append((f'{brand}-sequencer', 1))
-                queries.append((f'{brand}-module', 1))
-                if brand not in ['Yamaha', 'Casio', 'Hohner']: # avoid non-modular brands for eurorack to save time
-                    queries.append((f'{brand}-eurorack', 1))
-
-                for (base_query, pages) in queries:
-                    for page_num in range(1, pages + 1):
-                        search_display = base_query.replace('-', ' ').title()
-                        if page_num == 1:
-                            url = f'https://www.kleinanzeigen.de/s-musikinstrumente/{base_query}/k0c74'
-                        else:
-                            url = f'https://www.kleinanzeigen.de/s-musikinstrumente/seite:{page_num}/{base_query}/k0c74'
+                for attempt in range(3):
+                    try:
+                        await asyncio.sleep(random.uniform(2.5, 5.5))
+                        await page.goto(url, wait_until='domcontentloaded', timeout=20000)
+                        await asyncio.sleep(random.uniform(3.0, 6.0))
                         
-                        for attempt in range(3):
-                            try:
-                                # Comportamiento humano: Retraso aleatorio antes de navegar
-                                time.sleep(random.uniform(2.5, 5.5))
-                                page.goto(url, wait_until='domcontentloaded', timeout=20000)
-                                # Simular lectura de página
-                                time.sleep(random.uniform(3.0, 6.0))
-                                
-                                # Mouse movement falso
-                                page.mouse.move(random.randint(100, 500), random.randint(100, 500))
-                                page.mouse.wheel(0, random.randint(300, 800))
-                                time.sleep(random.uniform(1.0, 2.5))
-                                
-                                break
-                            except Exception as e:
-                                logging.warning(f'Timeout/error cargando {url} (Intento {attempt + 1}/3): {e}')
-                                if attempt == 2:
-                                    continue
-                                time.sleep(random.uniform(5.0, 10.0))
+                        await page.mouse.move(random.randint(100, 500), random.randint(100, 500))
+                        await page.mouse.wheel(0, random.randint(300, 800))
+                        await asyncio.sleep(random.uniform(1.0, 2.5))
                         
-                        soup = BeautifulSoup(page.content(), 'html.parser')
-                        ads = soup.find_all('article', class_='aditem')
-                        logging.info(f'[{search_display} p{page_num}] Encontrados {len(ads)} anuncios.')
-                        
-                        for ad in ads:
-                            title_elem = ad.find('a', class_='ellipsis')
-                            desc_elem = ad.find('p', class_='aditem-main--middle--description')
-                            price_elem = ad.find('p', class_='aditem-main--middle--price-shipping--price')
-                            
-                            if not title_elem or not price_elem:
-                                continue
-                                
-                            title = title_elem.text.strip()
-                            link = 'https://www.kleinanzeigen.de' + title_elem['href']
-                            desc = desc_elem.text.strip() if desc_elem else ''
-                            price_str = price_elem.text.strip()
-                            
-                            img_elem = ad.find('img', class_='imagebox-thumbnail')
-                            if not img_elem:
-                                img_elem = ad.find('img')
-                            image_url = img_elem.get('src', '') if img_elem else ''
-                            if image_url:
-                                # Upgrade Kleinanzeigen thumbnail quality ($_2 -> $_59 or $_57)
-                                image_url = re.sub(r'\$_\d+\.JPG', '$_59.JPG', image_url, flags=re.IGNORECASE)
-                            
-                            price = extract_price(price_str)
-                            analysis = analyze_listing(title, desc, price, link, image_url, source='Kleinanzeigen')
-                            
-                            if analysis and link not in seen_links:
-                                seen_links.add(link)
-                                results.append(analysis)
-                
-                # Cerrar contexto para limpiar cookies (Amnesia)
-                context.close()
-                time.sleep(random.uniform(4.0, 8.0))
-
-            # eBay no es tan estricto, usamos un solo contexto
-            logging.info('Iniciando escaneo en ebay.de...')
-            context = browser.new_context(viewport={'width': 1280, 'height': 800}, locale='de-DE')
-            page = context.new_page()
-            
-            for brand in TARGET_BRANDS:
-                url = f'https://www.ebay.de/sch/i.html?_nkw={brand}+synthesizer&LH_BIN=1&LH_ItemCondition=3000&_ipg=60'
-                try:
-                    time.sleep(random.uniform(2.0, 4.0))
-                    page.goto(url, wait_until='domcontentloaded', timeout=15000)
-                    time.sleep(random.uniform(2.0, 4.0))
-                    
-                    soup = BeautifulSoup(page.content(), 'html.parser')
-                    for link in soup.find_all('a', href=lambda h: h and '/itm/' in h):
-                        href = link.get('href').split('?')[0]
-                        if href in seen_links:
+                        break
+                    except Exception as e:
+                        logging.warning(f'Timeout/error cargando {url} (Intento {attempt + 1}/3): {e}')
+                        if attempt == 2:
                             continue
-                        seen_links.add(href)
-                        parent = link.find_parent('li')
-                        if parent:
-                            title_el = parent.find(class_=lambda c: c and 'title' in c)
-                            price_el = parent.find(class_=lambda c: c and 'price' in c)
+                        await asyncio.sleep(random.uniform(5.0, 10.0))
+                
+                try:
+                    content = await page.content()
+                    soup = BeautifulSoup(content, 'html.parser')
+                    ads = soup.find_all('article', class_='aditem')
+                    logging.info(f'[{search_display} p{page_num}] Encontrados {len(ads)} anuncios.')
+                    
+                    for ad in ads:
+                        title_elem = ad.find('a', class_='ellipsis')
+                        desc_elem = ad.find('p', class_='aditem-main--middle--description')
+                        price_elem = ad.find('p', class_='aditem-main--middle--price-shipping--price')
+                        
+                        if not title_elem or not price_elem:
+                            continue
                             
-                            if title_el and price_el:
-                                price = extract_price(price_el.text.strip())
-                                img_url = parent.find('img').get('src', '') if parent.find('img') else ''
-                                if img_url:
-                                    # Upgrade eBay thumbnail quality (s-l225 -> s-l500)
-                                    img_url = re.sub(r's-l\d+\.', 's-l500.', img_url, flags=re.IGNORECASE)
-                                opp = analyze_listing(title_el.text.strip(), '', price, href, img_url, source='eBay')
-                                if opp:
-                                    results.append(opp)
+                        title = title_elem.text.strip()
+                        link = 'https://www.kleinanzeigen.de' + title_elem['href']
+                        desc = desc_elem.text.strip() if desc_elem else ''
+                        price_str = price_elem.text.strip()
+                        
+                        img_elem = ad.find('img', class_='imagebox-thumbnail')
+                        if not img_elem:
+                            img_elem = ad.find('img')
+                        image_url = img_elem.get('src', '') if img_elem else ''
+                        if image_url:
+                            image_url = re.sub(r'\$_\d+\.JPG', '$_59.JPG', image_url, flags=re.IGNORECASE)
+                        
+                        price = extract_price(price_str)
+                        analysis = analyze_listing(title, desc, price, link, image_url, source='Kleinanzeigen')
+                        
+                        if analysis and link not in seen_links:
+                            seen_links.add(link)
+                            results.append(analysis)
                 except Exception as e:
-                    logging.error(f'Error parseando tarjeta de eBay: {e}')
-            
-            context.close()
-            return results
-            
-        except Exception as e:
-            logging.error(f'Error durante el scraping: {e}')
-        finally:
-            browser.close()
+                    logging.error(f'Error procesando página {url}: {e}')
+        
+        await context.close()
+        await asyncio.sleep(random.uniform(4.0, 8.0))
+    return results
 
+async def scrape_ebay_brand(brand, page, seen_links):
+    results = []
+    url = f'https://www.ebay.de/sch/i.html?_nkw={brand}+synthesizer&LH_BIN=1&LH_ItemCondition=3000&_ipg=60'
+    try:
+        await asyncio.sleep(random.uniform(2.0, 4.0))
+        await page.goto(url, wait_until='domcontentloaded', timeout=15000)
+        await asyncio.sleep(random.uniform(2.0, 4.0))
+        
+        content = await page.content()
+        soup = BeautifulSoup(content, 'html.parser')
+        for link in soup.find_all('a', href=lambda h: h and '/itm/' in h):
+            href = link.get('href').split('?')[0]
+            if href in seen_links:
+                continue
+            seen_links.add(href)
+            parent = link.find_parent('li')
+            if parent:
+                title_el = parent.find(class_=lambda c: c and 'title' in c)
+                price_el = parent.find(class_=lambda c: c and 'price' in c)
+                
+                if title_el and price_el:
+                    price = extract_price(price_el.text.strip())
+                    img_url = parent.find('img').get('src', '') if parent.find('img') else ''
+                    if img_url:
+                        img_url = re.sub(r's-l\d+\.', 's-l500.', img_url, flags=re.IGNORECASE)
+                    opp = analyze_listing(title_el.text.strip(), '', price, href, img_url, source='eBay')
+                    if opp:
+                        results.append(opp)
+    except Exception as e:
+        logging.error(f'Error parseando tarjeta de eBay para {brand}: {e}')
+    return results
 
-def scrape_thomann_bstock():
+async def scrape_thomann_bstock(browser, stealth_async):
     logging.info('Iniciando escaneo de Thomann B-Stock (Stealth)...')
     results = []
     
     try:
-        from playwright_stealth import stealth_sync
-    except ImportError:
-        stealth_sync = None
-
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        try:
-            context = browser.new_context(viewport={'width': 1280, 'height': 800}, locale='de-DE')
-            page = context.new_page()
-            if stealth_sync:
-                stealth_sync(page)
+        context = await browser.new_context(viewport={'width': 1280, 'height': 800}, locale='de-DE')
+        page = await context.new_page()
+        if stealth_async:
+            await stealth_async(page)
+            
+        url = 'https://www.thomann.de/de/blowouts_GF_synthesizer.html'
+        
+        await asyncio.sleep(random.uniform(2.0, 5.0))
+        await page.goto(url, wait_until='domcontentloaded', timeout=30000)
+        await asyncio.sleep(random.uniform(3.0, 6.0))
+        
+        await page.mouse.move(random.randint(100, 500), random.randint(100, 500))
+        await page.mouse.wheel(0, random.randint(300, 800))
+        await asyncio.sleep(random.uniform(1.0, 2.0))
+        
+        content = await page.content()
+        soup = BeautifulSoup(content, 'html.parser')
+        cards = soup.find_all('a', class_=lambda c: c and 'fx-product-box' in c)
+        
+        logging.info(f'[Thomann B-Stock] Encontrados {len(cards)} anuncios.')
+        
+        for card in cards:
+            title_el = card.find('div', class_='description')
+            if not title_el:
+                continue
+            
+            title = title_el.text.strip().replace('\\n', ' ')
                 
-            # Thomann Synths B-Stock URL
-            url = 'https://www.thomann.de/de/blowouts_GF_synthesizer.html'
+            price_el = card.find('span', class_='price__primary')
+            if not price_el:
+                continue
             
-            time.sleep(random.uniform(2.0, 5.0))
-            page.goto(url, wait_until='domcontentloaded', timeout=30000)
-            time.sleep(random.uniform(3.0, 6.0))
-            
-            page.mouse.move(random.randint(100, 500), random.randint(100, 500))
-            page.mouse.wheel(0, random.randint(300, 800))
-            time.sleep(random.uniform(1.0, 2.0))
-            
-            soup = BeautifulSoup(page.content(), 'html.parser')
-            # Find product cards
-            cards = soup.find_all('a', class_=lambda c: c and 'fx-product-box' in c)
-            
-            logging.info(f'[Thomann B-Stock] Encontrados {len(cards)} anuncios.')
-            
-            for card in cards:
-                title_el = card.find('div', class_='description')
-                if not title_el:
-                    continue
+            link = card.get('href')
+            if link and not link.startswith('http'):
+                link = 'https://www.thomann.de/de/' + link
                 
-                title = title_el.text.strip().replace('\\n', ' ')
+            price_str = price_el.text.strip()
+            price = extract_price(price_str)
+            
+            img_el = card.find('picture')
+            img_url = ''
+            if img_el:
+                source = img_el.find('source', type=lambda t: t != 'image/webp')
+                if source and source.get('data-srcset'):
+                    img_url = source.get('data-srcset').split(',')[0].strip().split(' ')[0]
+                else:
+                    img_src = img_el.find('img')
+                    if img_src:
+                        img_url = img_src.get('data-src') or img_src.get('src')
+            
+            if img_url and not img_url.startswith('http'):
+                img_url = 'https://www.thomann.de' + img_url
+            
+            brand_match = False
+            for b in TARGET_BRANDS:
+                if b.lower() in title.lower():
+                    brand_match = True
+                    break
                     
-                price_el = card.find('span', class_='price__primary')
-                if not price_el:
-                    continue
-                
-                link = card.get('href')
-                if link and not link.startswith('http'):
-                    link = 'https://www.thomann.de/de/' + link
+            if brand_match:
+                analysis = analyze_listing(title, "B-Stock from Thomann", price, link, img_url, source='Thomann B-Stock')
+                if analysis:
+                    analysis['estado'] = 'B-Stock / Oficial'
+                    results.append(analysis)
                     
-                price_str = price_el.text.strip()
-                price = extract_price(price_str)
-                
-                img_el = card.find('picture')
-                img_url = ''
-                if img_el:
-                    source = img_el.find('source', type=lambda t: t != 'image/webp')
-                    if source and source.get('data-srcset'):
-                        img_url = source.get('data-srcset').split(',')[0].strip().split(' ')[0]
-                    else:
-                        img_src = img_el.find('img')
-                        if img_src:
-                            img_url = img_src.get('data-src') or img_src.get('src')
-                
-                if img_url and not img_url.startswith('http'):
-                    img_url = 'https://www.thomann.de' + img_url
-                
-                # Verify if it's one of our target brands
-                brand_match = False
-                for b in TARGET_BRANDS:
-                    if b.lower() in title.lower():
-                        brand_match = True
-                        break
-                        
-                if brand_match:
-                    analysis = analyze_listing(title, "B-Stock from Thomann", price, link, img_url, source='Thomann B-Stock')
-                    if analysis:
-                        analysis['estado'] = 'B-Stock / Oficial'
-                        results.append(analysis)
-                        
-        except Exception as e:
-            logging.error(f'Error en Thomann B-Stock: {e}')
-        finally:
-            browser.close()
-            
+    except Exception as e:
+        logging.error(f'Error en Thomann B-Stock: {e}')
+    finally:
+        await context.close()
+        
     return results
 
-def main():
+async def scrape_all_platforms():
+    logging.info('Iniciando escaneo en kleinanzeigen.de y ebay.de con Playwright (STEALTH MODE)...')
+    all_results = []
+    
+    try:
+        from playwright_stealth import stealth_async
+    except ImportError:
+        stealth_async = None
+
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        
+        try:
+            seen_links = set()
+            major_brands = ['Roland', 'Korg', 'Yamaha', 'Akai', 'Elektron']
+            semaphore = asyncio.Semaphore(2)
+
+            kleinanzeigen_tasks = [
+                scrape_kleinanzeigen_brand(brand, browser, major_brands, seen_links, stealth_async, semaphore)
+                for brand in TARGET_BRANDS
+            ]
+            
+            ebay_context = await browser.new_context(viewport={'width': 1280, 'height': 800}, locale='de-DE')
+            ebay_page = await ebay_context.new_page()
+            
+            ebay_tasks = [
+                scrape_ebay_brand(brand, ebay_page, seen_links)
+                for brand in TARGET_BRANDS
+            ]
+            
+            thomann_task = [scrape_thomann_bstock(browser, stealth_async)]
+            
+            all_tasks = kleinanzeigen_tasks + ebay_tasks + thomann_task
+            results_lists = await asyncio.gather(*all_tasks, return_exceptions=True)
+            
+            for res in results_lists:
+                if isinstance(res, list):
+                    all_results.extend(res)
+                elif isinstance(res, Exception):
+                    logging.error(f"Task failed with exception: {res}")
+            
+            await ebay_context.close()
+            
+        except Exception as e:
+            logging.error(f'Error durante el scraping: {e}')
+        finally:
+            await browser.close()
+            
+    return all_results
+
+async def main_async():
     print("🤖 Iniciando Bot Experto en Arbitraje de Sintetizadores (Cloud Version)...")
     
-    opportunities = scrape_all_platforms()
+    opportunities = await scrape_all_platforms()
     
     if opportunities:
         for opp in opportunities:
@@ -534,6 +547,9 @@ def main():
         print(f"\n✅ Ciclo completado. {len(opportunities)} nuevas/actualizadas.")
     else:
         print("Ciclo vacío o abortado.")
+
+def main():
+    asyncio.run(main_async())
 
 if __name__ == "__main__":
     main()
