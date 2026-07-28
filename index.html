@@ -453,10 +453,7 @@
                     const grid = document.getElementById('grid');
                     grid.innerHTML = ''; // Clear current
                     
-                                        let allResults = result || [];
-                    let bStockAds = allResults.filter(o => o.plataforma === 'Thomann B-Stock');
-                    // Restauramos opps para que incluya todos los resultados (y responda a los checkboxes)
-                    let opps = allResults;
+                                        let opps = result || [];
 
                     // Initialize config with dynamic brands from data if first load
                     if (!currentConfig || Object.keys(currentConfig.brands || {}).length === 0) {
