@@ -14,11 +14,14 @@ JUNK_KEYWORDS: List[str] = [
     "case", "flightcase", "cover", "dust", "decksaver", "manual", "anleitung", 
     "knob", "fader", "pot", "psu", "power supply", "netzteil", "cable", "kabel", 
     "stand", "ständer", "gigbag", "bag", "tasche", "box", "ovp", "box only", 
-    "decal", "sticker"
+    "decal", "sticker", "trafo", "transformer", "transformador", "seitenteile", 
+    "holzseitenteile", "wood panels", "wooden sides", "rack ears", "rackmount", 
+    "holz", "wood", "stromkabel"
 ]
 
 ACCESSORY_KEYWORDS: List[str] = [
-    "cartridge", "memory", "ram", "rom", "card", "pedal", "expansion"
+    "cartridge", "memory", "ram", "rom", "card", "pedal", "expansion", 
+    "voice", "voice card", "sequencer expander"
 ]
 
 DEFECTIVE_KEYWORDS: List[str] = [
