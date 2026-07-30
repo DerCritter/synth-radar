@@ -375,7 +375,7 @@
 
             card.innerHTML = `
                 ${isBStock ? '<div class="bstock-sponsor-badge"><i data-lucide="shield-check"></i> Thomann B-Stock</div>' : ''}
-                ${isNew && !isBStock ? '<div class="new-badge">NEW</div>' : ''}
+                ${isNew ? '<div class="new-badge">NEW</div>' : ''}
                 ${isGreatDeal && !isBStock ? '<div class="great-deal-badge"><i data-lucide="flame"></i>HOT DEAL</div>' : ''}
                 <div class="platform-badge ${platformClass}"><i data-lucide="${platformIcon}"></i>${platform}</div>
                 ${hasImage ? `<div class="card-image-wrap">
