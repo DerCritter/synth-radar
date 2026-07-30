@@ -180,6 +180,9 @@ def analyze_listing(
             re.search(rf"\b{re.escape(kw)}\b", title_lower)
             for kw in ACCESSORY_KEYWORDS
         )
+        
+        if is_accessory:
+            return None
 
         if source == "Thomann B-Stock":
             condition_label = "B-Stock / Oficial"
@@ -194,10 +197,6 @@ def analyze_listing(
                 condition_label = "Funcional (Gebrauchsspuren)"
 
             discount_str = f"{int(discount * 100)}%"
-
-            if is_accessory:
-                condition_label = "Accesorio / " + condition_label
-                discount_str = "0%"
 
         if is_defekt:
             msg = (

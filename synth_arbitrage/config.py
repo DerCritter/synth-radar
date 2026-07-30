@@ -16,7 +16,11 @@ JUNK_KEYWORDS: List[str] = [
     "stand", "ständer", "gigbag", "bag", "tasche", "box", "ovp", "box only", 
     "decal", "sticker", "trafo", "transformer", "transformador", "seitenteile", 
     "holzseitenteile", "wood panels", "wooden sides", "rack ears", "rackmount", 
-    "holz", "wood", "stromkabel"
+    "holz", "wood", "stromkabel", "pack", "contents", "sound expansion", 
+    "sound pack", "expansion pack", "expansion board", "flash board", "fl1024", 
+    "brochure", "broschüre", "guide", "instructions", "bedienungsanleitung", 
+    "owner's manual", "service manual", "service notes", "schematics", 
+    "rom", "ram", "memory card", "cartridge", "soundkarte"
 ]
 
 ACCESSORY_KEYWORDS: List[str] = [
@@ -68,17 +72,19 @@ MARKET_VALUES: Dict[str, Tuple[int, int]] = {
     # KORG
     "Korg MS-20": (1100, 1500), "Korg Polysix": (1600, 2200), "Korg M1": (450, 650), "Korg Electribe": (300, 450),
     "Korg Mono/Poly": (2200, 2800), "Korg Wavestation": (400, 550), "Korg Minilogue": (340, 420), "Korg Opsix": (400, 550),
-    "Korg Triton": (450, 650), "Korg Kronos": (1800, 2400), "Korg Volca": (90, 150),
-    "Korg Volca FM": (100, 140), "Korg Volca Keys": (90, 130), "Korg Volca Bass": (90, 130),
+    "Korg Triton": (450, 650), "Korg Kronos": (1800, 2400),
+    "Korg Volca FM": (100, 140), "Korg Volca FM2": (120, 160), "Korg Volca Keys": (90, 130), "Korg Volca Bass": (90, 130),
     "Korg Volca Sample": (85, 125), "Korg Volca Beats": (80, 120), "Korg Volca Nubass": (110, 150),
-    "Korg Volca Drum": (100, 140), "Korg Volca Modular": (120, 160), "Korg Microkorg": (220, 300),
-    "Korg Electribe EMX-1": (550, 750), "Korg Electribe ESX-1": (550, 750), "Korg Electribe 2": (220, 300),
+    "Korg Volca Drum": (100, 140), "Korg Volca Modular": (120, 160), "Korg Volca Kick": (100, 140), "Korg Volca Mix": (80, 120), 
+    "Korg Microkorg": (220, 300), "Korg Minilogue": (350, 450), "Korg Electribe ESX-1": (550, 750), "Korg Electribe 2": (220, 300),
     "Korg Minilogue XD": (400, 550), "Korg Monologue": (200, 250), "Korg Drumlogue": (380, 480), "Korg Modwave": (400, 550),
     "Korg Wavestate": (400, 550), "Korg Prologue": (850, 1100), "Korg NTS-1": (70, 110),
 
     # YAMAHA
     "Yamaha DX7": (600, 850), "Yamaha CS-80": (25000, 35000), "Yamaha AN1x": (700, 950), "Yamaha SY77": (450, 600),
-    "Yamaha Reface CS": (320, 450), "Yamaha Reface DX": (320, 450), "Yamaha Motif": (800, 1100), "Yamaha RX11": (250, 350),
+    "Yamaha Reface CS": (320, 450), "Yamaha Reface DX": (320, 450), 
+    "Yamaha Motif": (600, 800), "Yamaha Motif ES": (700, 900), "Yamaha Motif XS": (800, 1200), "Yamaha Motif XF": (1000, 1500),
+    "Yamaha RX11": (250, 350),
     "Yamaha CS-15": (900, 1200), "Yamaha DX21": (250, 350), "Yamaha SY99": (800, 1100), "Yamaha Montage": (2100, 2600),
     "Yamaha DX200": (650, 850), "Yamaha AN200": (550, 700), "Yamaha CS1x": (180, 280), "Yamaha CS2x": (220, 350),
 
@@ -100,7 +106,7 @@ MARKET_VALUES: Dict[str, Tuple[int, int]] = {
     "Ensoniq ESQ-1": (600, 800), "Ensoniq ASR-10": (1300, 1700), "Ensoniq VFX": (450, 550), "Ensoniq Fizmo": (4000, 5000),
 
     # OBERHEIM
-    "Oberheim OB-Xa": (7000, 9000), "Oberheim Matrix": (1100, 1300), "Oberheim DX": (1300, 1700), "Oberheim OB-6": (1900, 2300),
+    "Oberheim OB-Xa": (7000, 9000), "Oberheim Matrix 1000": (900, 1200), "Oberheim Matrix 6": (1100, 1500), "Oberheim Matrix 6R": (900, 1200), "Oberheim DX": (1300, 1700), "Oberheim OB-6": (1900, 2300),
 
     # CASIO (Pro)
     "Casio CZ-101": (300, 400), "Casio CZ-5000": (550, 650), "Casio FZ-1": (350, 450), "Casio VZ-1": (450, 550),
