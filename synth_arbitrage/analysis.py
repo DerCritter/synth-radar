@@ -181,19 +181,23 @@ def analyze_listing(
             for kw in ACCESSORY_KEYWORDS
         )
 
-        condition_label = "Funcional (Average)"
-        if is_defekt:
-            condition_label = "Defekt/Bastler"
-        elif is_mint:
-            condition_label = "Funcional (Mint)"
-        elif is_poor:
-            condition_label = "Funcional (Gebrauchsspuren)"
-
-        discount_str = f"{int(discount * 100)}%"
-
-        if is_accessory:
-            condition_label = "Accesorio / " + condition_label
+        if source == "Thomann B-Stock":
+            condition_label = "B-Stock / Oficial"
             discount_str = "0%"
+        else:
+            condition_label = "Funcional (Average)"
+            if is_defekt:
+                condition_label = "Defekt/Bastler"
+            elif is_mint:
+                condition_label = "Funcional (Mint)"
+            elif is_poor:
+                condition_label = "Funcional (Gebrauchsspuren)"
+
+            discount_str = f"{int(discount * 100)}%"
+
+            if is_accessory:
+                condition_label = "Accesorio / " + condition_label
+                discount_str = "0%"
 
         if is_defekt:
             msg = (

@@ -65,7 +65,10 @@ MARKET_VALUES: Dict[str, Tuple[int, int]] = {
     # KORG
     "Korg MS-20": (1100, 1500), "Korg Polysix": (1600, 2200), "Korg M1": (450, 650), "Korg Electribe": (300, 450),
     "Korg Mono/Poly": (2200, 2800), "Korg Wavestation": (400, 550), "Korg Minilogue": (340, 420), "Korg Opsix": (400, 550),
-    "Korg Triton": (450, 650), "Korg Kronos": (1800, 2400), "Korg Volca": (90, 150), "Korg Microkorg": (220, 300),
+    "Korg Triton": (450, 650), "Korg Kronos": (1800, 2400), "Korg Volca": (90, 150),
+    "Korg Volca FM": (100, 140), "Korg Volca Keys": (90, 130), "Korg Volca Bass": (90, 130),
+    "Korg Volca Sample": (85, 125), "Korg Volca Beats": (80, 120), "Korg Volca Nubass": (110, 150),
+    "Korg Volca Drum": (100, 140), "Korg Volca Modular": (120, 160), "Korg Microkorg": (220, 300),
     "Korg Electribe EMX-1": (550, 750), "Korg Electribe ESX-1": (550, 750), "Korg Electribe 2": (220, 300),
     "Korg Minilogue XD": (400, 550), "Korg Monologue": (200, 250), "Korg Drumlogue": (380, 480), "Korg Modwave": (400, 550),
     "Korg Wavestate": (400, 550), "Korg Prologue": (850, 1100), "Korg NTS-1": (70, 110),

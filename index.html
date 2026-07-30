@@ -316,27 +316,67 @@
             }
         };
 
+        function interleaveListings(normalOpps, bstockOpps, interval = 8) {
+            if (!bstockOpps || bstockOpps.length === 0) return normalOpps || [];
+            if (!normalOpps || normalOpps.length === 0) return bstockOpps || [];
+
+            const result = [];
+            let bIndex = 0;
+
+            for (let i = 0; i < normalOpps.length; i++) {
+                result.push(normalOpps[i]);
+                if ((i + 1) % interval === 0 && bIndex < bstockOpps.length) {
+                    result.push(bstockOpps[bIndex++]);
+                }
+            }
+
+            while (bIndex < bstockOpps.length) {
+                result.push(bstockOpps[bIndex++]);
+            }
+
+            return result;
+        }
+
         const createCard = (opp) => {
             const card = document.createElement('div');
             const savingsFloat = parseFloat(String(opp.ahorro_porcentaje || '0').replace('%', ''));
             const isGreatDeal = savingsFloat >= 40;
             const isNew = !seenAds[opp.url];
             
-            card.className = `opp-card ${isGreatDeal ? 'great-deal' : ''} ${isNew ? 'is-new' : ''}`;
+            const isBStock = opp.plataforma === 'Thomann B-Stock' || opp.plataforma === 'Thomann';
+            
+            card.className = `opp-card ${isGreatDeal ? 'great-deal' : ''} ${isNew ? 'is-new' : ''} ${isBStock ? 'bstock-card' : ''}`;
             card.setAttribute('data-url', opp.url);
             card.style.animation = 'slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards';
             
             const isDefekt = String(opp.estado || '').includes('Defekt');
-            const stateClass = isDefekt ? 'state-defekt' : 'state-funcional';
+            let stateClass = 'state-funcional';
+            if (isBStock) {
+                stateClass = 'state-bstock';
+            } else if (isDefekt) {
+                stateClass = 'state-defekt';
+            }
             const hasImage = opp.imagen && opp.imagen.trim() !== '';
             
             const platform = opp.plataforma || 'Kleinanzeigen';
-            const platformClass = platform === 'eBay' ? 'badge-ebay' : 'badge-kleinanzeigen';
-            const platformIcon = platform === 'eBay' ? 'shopping-cart' : 'shopping-bag';
+            let platformClass = 'badge-kleinanzeigen';
+            let platformIcon = 'shopping-bag';
+            if (platform === 'eBay') {
+                platformClass = 'badge-ebay';
+                platformIcon = 'shopping-cart';
+            } else if (isBStock) {
+                platformClass = 'badge-thomann';
+                platformIcon = 'store';
+            }
             
+            const primaryBtnText = isBStock ? 'View B-Stock Deal' : 'View Ad';
+            const primaryBtnClass = isBStock ? 'btn-thomann' : 'btn-primary';
+            const affiliatePlatform = isBStock ? 'Thomann' : platform;
+
             card.innerHTML = `
-                ${isNew ? '<div class="new-badge">NEW</div>' : ''}
-                ${isGreatDeal ? '<div class="great-deal-badge"><i data-lucide="flame"></i>HOT DEAL</div>' : ''}
+                ${isBStock ? '<div class="bstock-sponsor-badge"><i data-lucide="shield-check"></i> Thomann B-Stock</div>' : ''}
+                ${isNew && !isBStock ? '<div class="new-badge">NEW</div>' : ''}
+                ${isGreatDeal && !isBStock ? '<div class="great-deal-badge"><i data-lucide="flame"></i>HOT DEAL</div>' : ''}
                 <div class="platform-badge ${platformClass}"><i data-lucide="${platformIcon}"></i>${platform}</div>
                 ${hasImage ? `<div class="card-image-wrap">
                     <img class="card-image-bg" src="${opp.imagen}" alt="">
@@ -366,8 +406,8 @@
                 </div>
 
                 <div class="card-actions">
-                    <a href="${getAffiliateUrl(opp.url, opp.plataforma)}" target="_blank" class="btn btn-primary" title="Open in Kleinanzeigen">
-                        <i data-lucide="external-link"></i> View Ad
+                    <a href="${getAffiliateUrl(opp.url, affiliatePlatform)}" target="_blank" class="btn ${primaryBtnClass}" title="${primaryBtnText}">
+                        <i data-lucide="external-link"></i> ${primaryBtnText}
                     </a>
                     <a href="${getAffiliateUrl(opp.reverb || '#', 'Reverb')}" target="_blank" class="btn btn-reverb" title="See Reverb prices">
                         <i data-lucide="bar-chart-2"></i> Reverb
@@ -584,9 +624,13 @@
                         });
                     }
                     
+                    const allOpps = opps;
+                    const bStockAds = opps.filter(o => (o.plataforma || '') === 'Thomann B-Stock');
+                    opps = opps.filter(o => (o.plataforma || '') !== 'Thomann B-Stock');
+                    
                     // Count brands based on ALL data to show correct numbers even if filtered out
                     const brandCounts = {};
-                    opps.forEach(o => {
+                    allOpps.forEach(o => {
                         const brandName = (o.modelo || 'Unknown').split(' ')[0];
                         brandCounts[brandName] = (brandCounts[brandName] || 0) + 1;
                     });
@@ -601,15 +645,29 @@
                         }
                     });
                     
-                    document.getElementById('total-opps').textContent = opps.length;
+                    document.getElementById('total-opps').textContent = opps.length + bStockAds.length;
                     
-                    if (opps.length > 0) {
+                    if (opps.length > 0 || bStockAds.length > 0) {
                         let totalAhorro = 0;
                         opps.forEach((opp, index) => {
                             grid.appendChild(createCard(opp));
                             totalAhorro += parseFloat(String(opp.ahorro_porcentaje || '0').replace('%', ''));
+                            
+                            if ((index + 1) % 8 === 0 && bStockAds.length > 0) {
+                                const bStockItem = bStockAds.shift();
+                                const adCard = createCard(bStockItem);
+                                adCard.classList.add('ad-card');
+                                grid.appendChild(adCard);
+                            }
                         });
-                        document.getElementById('avg-margin').textContent = (totalAhorro / opps.length).toFixed(1) + '%';
+                        
+                        bStockAds.forEach(bStockItem => {
+                            const adCard = createCard(bStockItem);
+                            adCard.classList.add('ad-card');
+                            grid.appendChild(adCard);
+                        });
+                        
+                        document.getElementById('avg-margin').textContent = opps.length > 0 ? (totalAhorro / opps.length).toFixed(1) + '%' : '0%';
                         lucide.createIcons();
                     } else {
                         grid.innerHTML = `

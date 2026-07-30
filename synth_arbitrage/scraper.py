@@ -9,6 +9,7 @@ import logging
 import random
 import re
 from typing import Any, Dict, List, Optional, Set
+from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
@@ -220,8 +221,8 @@ async def scrape_thomann_bstock(
                 continue
 
             link = card.get("href")
-            if link and not link.startswith("http"):
-                link = "https://www.thomann.de/de/" + link
+            if link:
+                link = urljoin("https://www.thomann.de/de/", link)
 
             price_str = price_el.text.strip()
             price = extract_price(price_str)
@@ -249,7 +250,6 @@ async def scrape_thomann_bstock(
             if brand_match:
                 analysis = analyze_listing(title, "B-Stock from Thomann", price, link, img_url, source="Thomann B-Stock")
                 if analysis:
-                    analysis["estado"] = "B-Stock / Oficial"
                     results.append(analysis)
 
     except Exception as e:

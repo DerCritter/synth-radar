@@ -913,3 +913,104 @@ body {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
 }
+
+/* Thomann B-Stock Native Ad Cards Visual Highlighting */
+.bstock-card {
+    border: 1px solid rgba(20, 184, 166, 0.4);
+    background: linear-gradient(180deg, rgba(13, 148, 136, 0.08) 0%, rgba(24, 24, 27, 0.75) 100%);
+    box-shadow: 0 4px 24px -4px rgba(13, 148, 136, 0.15);
+}
+
+.bstock-card:hover {
+    border-color: rgba(20, 184, 166, 0.7);
+    box-shadow: 0 12px 40px -10px rgba(13, 148, 136, 0.3), 0 0 20px rgba(20, 184, 166, 0.1);
+}
+
+.bstock-sponsor-badge {
+    position: absolute;
+    top: -12px;
+    left: 16px;
+    background: linear-gradient(135deg, #0d9488, #14b8a6);
+    color: #ffffff;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 15px rgba(13, 148, 136, 0.4);
+    z-index: 10;
+}
+
+.bstock-sponsor-badge i {
+    width: 14px;
+    height: 14px;
+}
+
+.state-bstock {
+    background: rgba(20, 184, 166, 0.15);
+    color: #2dd4bf;
+    border: 1px solid rgba(20, 184, 166, 0.3);
+}
+
+.btn-thomann {
+    background: linear-gradient(135deg, #0d9488, #14b8a6);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.btn-thomann:hover {
+    background: linear-gradient(135deg, #14b8a6, #2dd4bf);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(13, 148, 136, 0.3);
+}
+
+
+
+/* Anuncio Publicitario Destacado para B-Stock */
+.ad-card {
+    border: 2px solid #ffd700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    background: linear-gradient(145deg, rgba(255,215,0,0.05), var(--surface));
+    transform: scale(1.02);
+    z-index: 10;
+    position: relative;
+}
+.ad-card::before {
+    content: 'DESTACADO';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #ffd700;
+    color: #000;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    z-index: 11;
+}
+
+
+/* Anuncio Publicitario Destacado para B-Stock */
+.ad-card {
+    border: 2px solid #ffd700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    background: linear-gradient(145deg, rgba(255,215,0,0.05), var(--surface));
+    transform: scale(1.02);
+    z-index: 10;
+    position: relative;
+}
+.ad-card::before {
+    content: 'DESTACADO';
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: #ffd700;
+    color: #000;
+    font-weight: bold;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    z-index: 11;
+}
