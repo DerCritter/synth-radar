@@ -126,28 +126,34 @@ async def scrape_kleinanzeigen_brand(
 
 async def scrape_ebay_brand(
     brand: str,
-    page: Any,
-    seen_links: Set[str]
+    browser: Any,
+    seen_links: Set[str],
+    semaphore: asyncio.Semaphore
 ) -> List[Dict[str, Any]]:
     """Scrapes eBay DE listings for a specific brand asynchronously.
 
     Args:
         brand: Target brand string.
-        page: Playwright Page instance.
+        browser: Playwright Browser instance.
         seen_links: Set of seen URLs to prevent duplicated output.
+        semaphore: Concurrency limiter.
 
     Returns:
         List of opportunity dictionaries found on eBay.
     """
     results: List[Dict[str, Any]] = []
     url = f"https://www.ebay.de/sch/i.html?_nkw={brand}+synthesizer&LH_BIN=1&LH_ItemCondition=3000&_ipg=60"
-    try:
-        await asyncio.sleep(random.uniform(2.0, 4.0))
-        await page.goto(url, wait_until="domcontentloaded", timeout=15000)
-        await asyncio.sleep(random.uniform(2.0, 4.0))
+    async with semaphore:
+        try:
+            context = await browser.new_context(viewport={"width": 1280, "height": 800}, locale="de-DE")
+            page = await context.new_page()
+            
+            await asyncio.sleep(random.uniform(2.0, 4.0))
+            await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+            await asyncio.sleep(random.uniform(2.0, 4.0))
 
-        content = await page.content()
-        soup = BeautifulSoup(content, "html.parser")
+            content = await page.content()
+            soup = BeautifulSoup(content, "html.parser")
         for link in soup.find_all("a", href=lambda h: h and "/itm/" in h):
             href = link.get("href").split("?")[0]
             if href in seen_links:
@@ -166,8 +172,11 @@ async def scrape_ebay_brand(
                     opp = analyze_listing(title_el.text.strip(), "", price, href, img_url, source="eBay")
                     if opp:
                         results.append(opp)
-    except Exception as e:
-        logging.error(f"Error parseando tarjeta de eBay para {brand}: {e}")
+        except Exception as e:
+            logging.error(f"Error parseando tarjeta de eBay para {brand}: {e}")
+        finally:
+            await context.close()
+            await asyncio.sleep(random.uniform(2.0, 5.0))
     return results
 
 
@@ -290,11 +299,8 @@ async def scrape_all_platforms() -> List[Dict[str, Any]]:
                 for brand in TARGET_BRANDS
             ]
 
-            ebay_context = await browser.new_context(viewport={"width": 1280, "height": 800}, locale="de-DE")
-            ebay_page = await ebay_context.new_page()
-
             ebay_tasks = [
-                scrape_ebay_brand(brand, ebay_page, seen_links)
+                scrape_ebay_brand(brand, browser, seen_links, semaphore)
                 for brand in TARGET_BRANDS
             ]
 
@@ -308,8 +314,6 @@ async def scrape_all_platforms() -> List[Dict[str, Any]]:
                     all_results.extend(res)
                 elif isinstance(res, Exception):
                     logging.error(f"Task failed with exception: {res}")
-
-            await ebay_context.close()
 
         except Exception as e:
             logging.error(f"Error durante el scraping: {e}")
