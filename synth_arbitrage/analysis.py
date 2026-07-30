@@ -129,7 +129,22 @@ def analyze_listing(
         pattern_str = r"[\s\-]*".join([re.escape(p) for p in parts])
         pattern = rf"\b{pattern_str}\b"
 
-        if re.search(pattern, clean_title):
+        match = re.search(pattern, clean_title)
+        if match:
+            # Check the next word after the match to ensure it's not an edition we don't have in the DB
+            end_pos = match.end()
+            rest = clean_title[end_pos:].strip()
+            next_word = re.split(r"[\s\-\.,]+", rest)[0] if rest else ""
+            
+            # Common edition suffixes: mk2, II, XF, 61, 88, pro, rack, etc.
+            suffix_pattern = r"^(mk\d*|mk[ivx]+|[ivx]+|pro|rack|module|desktop|keys|bass|beats|sample|fm|xd|drum|kick|mix|modular|es|xs|xf|ex|se|le|rev\d*|v\d*|mini|micro|\d{1,3}[a-z]*)$"
+            
+            if next_word and re.match(suffix_pattern, next_word):
+                # The title has an edition suffix that wasn't part of the exact model name.
+                # E.g. We matched "Korg Minilogue" but the next word is "XD". 
+                # We should NOT accept it as a regular Minilogue.
+                continue
+
             detected_model = model
             break
 
