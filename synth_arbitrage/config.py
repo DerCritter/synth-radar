@@ -21,7 +21,7 @@ JUNK_KEYWORDS: List[str] = [
 
 ACCESSORY_KEYWORDS: List[str] = [
     "cartridge", "memory", "ram", "rom", "card", "pedal", "expansion", 
-    "voice", "voice card", "sequencer expander"
+    "voice", "voice card"
 ]
 
 DEFECTIVE_KEYWORDS: List[str] = [
