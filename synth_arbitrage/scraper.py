@@ -154,24 +154,24 @@ async def scrape_ebay_brand(
 
             content = await page.content()
             soup = BeautifulSoup(content, "html.parser")
-        for link in soup.find_all("a", href=lambda h: h and "/itm/" in h):
-            href = link.get("href").split("?")[0]
-            if href in seen_links:
-                continue
-            seen_links.add(href)
-            parent = link.find_parent("li")
-            if parent:
-                title_el = parent.find(class_=lambda c: c and "title" in c)
-                price_el = parent.find(class_=lambda c: c and "price" in c)
-
-                if title_el and price_el:
-                    price = extract_price(price_el.text.strip())
-                    img_url = parent.find("img").get("src", "") if parent.find("img") else ""
-                    if img_url:
-                        img_url = re.sub(r"s-l\d+\.", "s-l500.", img_url, flags=re.IGNORECASE)
-                    opp = analyze_listing(title_el.text.strip(), "", price, href, img_url, source="eBay")
-                    if opp:
-                        results.append(opp)
+            for link in soup.find_all("a", href=lambda h: h and "/itm/" in h):
+                href = link.get("href").split("?")[0]
+                if href in seen_links:
+                    continue
+                seen_links.add(href)
+                parent = link.find_parent("li")
+                if parent:
+                    title_el = parent.find(class_=lambda c: c and "title" in c)
+                    price_el = parent.find(class_=lambda c: c and "price" in c)
+    
+                    if title_el and price_el:
+                        price = extract_price(price_el.text.strip())
+                        img_url = parent.find("img").get("src", "") if parent.find("img") else ""
+                        if img_url:
+                            img_url = re.sub(r"s-l\d+\.", "s-l500.", img_url, flags=re.IGNORECASE)
+                        opp = analyze_listing(title_el.text.strip(), "", price, href, img_url, source="eBay")
+                        if opp:
+                            results.append(opp)
         except Exception as e:
             logging.error(f"Error parseando tarjeta de eBay para {brand}: {e}")
         finally:
