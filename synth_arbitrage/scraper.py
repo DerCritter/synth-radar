@@ -127,12 +127,12 @@ async def scrape_kleinanzeigen_brand(
         finally:
             if page:
                 try:
-                    await page.close()
+                    await asyncio.wait_for(page.close(), timeout=1.5)
                 except Exception as e:
                     logging.debug(f"Error cerrando página en Kleinanzeigen: {e}")
             if context:
                 try:
-                    await context.close()
+                    await asyncio.wait_for(context.close(), timeout=1.5)
                 except Exception as e:
                     logging.debug(f"Error cerrando contexto en Kleinanzeigen: {e}")
 
@@ -199,12 +199,12 @@ async def scrape_ebay_brand(
         finally:
             if page:
                 try:
-                    await page.close()
+                    await asyncio.wait_for(page.close(), timeout=1.5)
                 except Exception as e:
                     logging.debug(f"Error cerrando página en eBay: {e}")
             if context:
                 try:
-                    await context.close()
+                    await asyncio.wait_for(context.close(), timeout=1.5)
                 except Exception as e:
                     logging.debug(f"Error cerrando contexto en eBay: {e}")
 
@@ -301,12 +301,12 @@ async def scrape_thomann_bstock(
     finally:
         if page:
             try:
-                await page.close()
+                await asyncio.wait_for(page.close(), timeout=1.5)
             except Exception as e:
                 logging.debug(f"Error cerrando página en Thomann B-Stock: {e}")
         if context:
             try:
-                await context.close()
+                await asyncio.wait_for(context.close(), timeout=1.5)
             except Exception as e:
                 logging.debug(f"Error cerrando contexto en Thomann B-Stock: {e}")
 
