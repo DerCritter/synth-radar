@@ -1,15 +1,16 @@
 :root {
-    --bg-color: #000000; 
-    --card-bg: rgba(10, 10, 10, 0.4); 
-    --border-color: rgba(255, 255, 255, 0.1);
-    --border-highlight: rgba(255, 255, 255, 0.3);
-    --text-primary: #ffffff; 
-    --text-secondary: #888888; 
-    --accent: #ffffff; 
-    --accent-glow: rgba(255, 255, 255, 0.1);
-    --success: #ffffff; 
-    --warning: #ffffff; 
-    --hot-deal: #ffffff; 
+    --bg-color: #050505; 
+    --card-bg: rgba(12, 12, 12, 0.6); 
+    --border-color: rgba(255, 255, 255, 0.07);
+    --border-highlight: rgba(255, 255, 255, 0.15);
+    --text-primary: #e8e8e8; 
+    --text-secondary: #666666; 
+    --accent: #e8e8e8; 
+    --accent-glow: rgba(255, 255, 255, 0.06);
+    --success: #e8e8e8; 
+    --warning: #e8e8e8; 
+    --hot-deal: #e8e8e8; 
+    --primary-gradient: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
     --font-heading: 'Inter', system-ui, sans-serif;
     --font-body: 'Inter', system-ui, sans-serif;
 }
@@ -312,9 +313,9 @@ body::before {
 /* Overview Metrics */
 .overview {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 1.5rem;
-    margin-bottom: 3.5rem;
+    margin-bottom: 1.5rem;
 }
 
 .metric-card {
@@ -956,121 +957,120 @@ body::before {
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* MINIMALIST DATA VISUALIZER */
-.aiwa-lcd-panel {
-    background: var(--bg-card);
+/* PREMIUM DATA VISUALIZER */
+.visualizer-section {
+    background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 1.5rem 1rem 1rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-    height: 120px;
-    flex: 1;
-    min-width: 200px;
-    position: relative;
+    padding: 1.5rem 1.5rem 0;
+    margin-bottom: 2.5rem;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     overflow: hidden;
 }
 
-.aiwa-lcd-panel::after {
-    display: none;
+.visualizer-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 1.25rem;
 }
 
-.aiwa-title {
-    position: absolute;
-    top: 1rem;
-    left: 1.5rem;
+.visualizer-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #6366f1;
+    box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+}
+
+.visualizer-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 2px;
     color: var(--text-secondary);
-    font-size: 0.75rem;
-    letter-spacing: 1px;
-    z-index: 1;
     text-transform: uppercase;
-    font-weight: 500;
 }
 
 .aiwa-spectrum {
     display: flex;
-    gap: 8px;
+    gap: 0;
     align-items: flex-end;
-    height: 100%;
     width: 100%;
-    justify-content: space-around;
+    height: 160px;
+    justify-content: center;
     z-index: 1;
+    padding-bottom: 110px;
+    position: relative;
 }
 
 .aiwa-bar-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 0;
     height: 100%;
     flex: 1;
-    max-width: 30px;
+    position: relative;
 }
 
 .aiwa-bar {
     display: flex;
     flex-direction: column-reverse;
     gap: 2px;
-    width: 100%;
+    width: 50%;
     height: 100%;
     justify-content: flex-start;
 }
 
 .aiwa-segment {
     width: 100%;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.05); 
-    border-radius: 1px;
-    transition: background 0.1s ease;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 2px;
 }
 
 .aiwa-segment.active {
-    background: var(--text-secondary);
-    box-shadow: none;
+    background: rgba(99, 102, 241, 0.4);
 }
 
 .aiwa-segment.active.mid {
-    background: var(--text-primary);
-    box-shadow: none;
+    background: rgba(139, 92, 246, 0.6);
 }
 
 .aiwa-segment.active.peak {
-    background: #ffffff;
-    box-shadow: none;
+    background: rgba(168, 85, 247, 0.85);
+    box-shadow: 0 0 6px rgba(168, 85, 247, 0.3);
+}
+
+.aiwa-bar-wrapper:hover .aiwa-segment.active {
+    background: rgba(139, 92, 246, 0.7);
+}
+.aiwa-bar-wrapper:hover .aiwa-segment.active.mid {
+    background: rgba(168, 85, 247, 0.85);
+}
+.aiwa-bar-wrapper:hover .aiwa-segment.active.peak {
+    background: #a855f7;
+    box-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
 }
 
 .aiwa-label {
-    color: var(--text-primary);
-    background: transparent;
-    border: 1px solid var(--border-highlight);
-    padding: 6px 3px;
-    border-radius: 4px;
-    font-size: 0.65rem;
-    text-transform: uppercase;
-    text-align: center;
-    letter-spacing: 0.5px;
-    z-index: 1;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    color: var(--text-secondary);
+    font-size: 0.6rem;
+    font-weight: 500;
+    letter-spacing: 0.3px;
     white-space: nowrap;
-    position: relative;
+    transform-origin: 0% 0%;
+    transform: rotate(45deg);
     font-family: var(--font-body);
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    max-height: 120px; /* give it space to grow down */
-    margin-top: 10px; /* space between bar and label */
+    transition: color 0.2s ease;
 }
 
-/* Simulate the line connecting blocks in a synth diagram */
-.aiwa-label::before {
-    content: '';
-    position: absolute;
-    bottom: -10px; /* changed from top because it's rotated 180deg */
-    left: 50%;
-    width: 1px;
-    height: 10px;
-    background: var(--border-highlight);
-    transform: translateX(-50%);
+.aiwa-bar-wrapper:hover .aiwa-label {
+    color: var(--text-primary);
 }
 
 .bstock-sponsor-badge {
