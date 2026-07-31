@@ -1,84 +1,36 @@
-# Handoff Report — SynthRadar Backend Refactoring and Test Suite Creation
+# Orchestrator Handoff Report — SynthRadar Scraper Deadlock & Concurrency Fix
 
-**Author**: Project Orchestrator
-**Parent**: Sentinel (`b29b2bd2-72f5-4634-a77c-a19d744781c0`)
-**Working Directory**: `/Users/dacritter/.gemini/antigravity/playground/pulsing-perseverance/.agents/orchestrator`
-**Date**: 2026-07-29
+## Milestone State
+- **M6.1 Exploration & Root Cause Analysis**: DONE (Explorers 1, 2, 3)
+- **M6.2 Scraper Fix & Concurrency Hardening**: DONE (Worker 1)
+- **M6.3 Verification, Stress Test & Forensic Integrity Audit**: DONE (Reviewers 1, 2; Challengers 1, 2; Forensic Auditor CLEAN)
 
----
+## Active Subagents
+- None (All 9 subagents completed).
 
-## 1. Executive Summary
+## Root Cause Analysis Summary
+1. **"Simmons" Position**: Brand "Simmons" is the last element (index 23 of 24) in `TARGET_BRANDS`. Scraper execution hangs occurred after "Simmons" completed because the process was exiting `scrape_all_platforms()`.
+2. **Context & Page Resource Leaks**: In `scrape_kleinanzeigen_brand`, `context.close()` was executed at line 122 outside a `try...finally` block. Unhandled navigation or parsing exceptions leaked Playwright `BrowserContext` and `Page` objects, which caused Chromium connection cleanup (`Connection.stop()`) to deadlock on process exit.
+3. **Semaphore Lock Contention**: Cooldown delays (`asyncio.sleep`) were executed inside `async with semaphore:` blocks, holding permits for 4–8 seconds per brand during pure sleep.
+4. **Platform Starvation**: A single shared `asyncio.Semaphore(2)` was used across Kleinanzeigen, eBay, and Thomann B-Stock, causing eBay and Thomann tasks to wait up to 30 minutes for Kleinanzeigen brand scans to finish.
+5. **eBay Logging Blackout**: `scrape_ebay_brand` lacked start, item count, and completion log statements, creating the illusion of a frozen process once Kleinanzeigen finished "Simmons".
+6. **Diagnostic Key Mismatch**: `diagnostic.py` accessed lowercase keys (`'modelo'`, `'precio'`) instead of the Spanish capitalized keys returned by `analyze_listing()`.
 
-All project objectives and acceptance criteria defined in `ORIGINAL_REQUEST.md` have been successfully completed and rigorously verified across 4 milestones:
+## Implemented Fixes
+1. **Unconditional Resource Cleanup**: Wrapped page/context allocations in strict `try ... finally` blocks across `scrape_kleinanzeigen_brand`, `scrape_ebay_brand`, and `scrape_thomann_bstock` to guarantee `page.close()` and `context.close()` execution regardless of errors.
+2. **Semaphore Optimization**: Moved `asyncio.sleep(...)` calls outside `async with semaphore:` blocks across all scrapers.
+3. **Platform Concurrency Isolation**: Separated semaphores into `kleinanzeigen_sem = asyncio.Semaphore(2)` and `ebay_sem = asyncio.Semaphore(2)` and allowed Thomann B-Stock and platform tasks to execute concurrently.
+4. **Logging & Timeouts**: Added explicit start, item count, error, and completion logs across all platform scrapers and enforced global 600s timeout handling in `scrape_all_platforms()`.
+5. **Key Alignment & Unit Tests**: Updated `diagnostic.py` key references to match `analyze_listing()` schema (`"Modelo"`, `"Precio URL"`, `"Plataforma"`, `"Estado"`, `"Ahorro %"`), fixed `tests/test_scraper.py` parameter signature mismatch, and added 10 new adversarial stress tests.
 
-1. **Modular Backend Refactoring**:
-   - Extracted `synth_arbitrage.py` into a clean package (`synth_arbitrage/`) containing:
-     - `synth_arbitrage/config.py`: Keywords, market value mappings, brand lists, and atomic JSON persistence.
-     - `synth_arbitrage/analysis.py`: Pure business evaluation logic (`analyze_listing`, `extract_price`, `get_market_price`, condition tagging, discount math, message drafts).
-     - `synth_arbitrage/scraper.py`: Playwright web scraping for Kleinanzeigen, eBay, and Thomann B-Stock.
-     - `synth_arbitrage/database.py`: Refined `SupabaseDB` database client with field mappers and query ops.
-   - `synth_arbitrage.py` remains the top-level executable entry point (`python synth_arbitrage.py`) and re-exports submodules for 100% backward compatibility.
-   - `supabase_client.py` acts as a backward-compatibility shim.
+## Verification Results
+- **Pytest Unit Test Suite**: 149/149 passed cleanly in ~1.3 seconds (`./venv/bin/python -m pytest`).
+- **Diagnostic Execution**: `python3 diagnostic.py` executes cleanly to completion without hanging, displaying active logs across Kleinanzeigen, eBay, and Thomann B-Stock.
+- **Forensic Auditor Verdict**: **CLEAN** (No hardcoded diagnostic outputs, no cheated mocks, no skipped platforms).
 
-2. **Python Type Annotations & Code Quality**:
-   - Added explicit Python type annotations (`from typing import Optional, Dict, Any, Tuple, List, Set`) across key functions and classes.
-   - Added Google-style docstrings to all functions.
-   - Syntax compilation check (`python3 -m py_compile synth_arbitrage/*.py synth_arbitrage.py supabase_client.py`) passes cleanly with 0 errors.
-
-3. **Automated Unit Test Suite (`pytest`)**:
-   - Built a comprehensive, zero-dependency unit test suite in `tests/` (`conftest.py`, `test_extract_price.py`, `test_analysis.py`, `test_database.py`, `test_scraper.py`, `test_integration.py`) and root `test_synth_arbitrage.py`.
-   - All network and database calls are mocked using Pytest fixtures and `AsyncMock`/`MagicMock`.
-   - **Test Results**: **127 / 127 tests pass 100%** in 0.50s (< 2s threshold) with 0 errors, 0 failures, and 0 warnings.
-
-4. **Multi-Agent Verification & Forensic Audit**:
-   - **Reviewer 1**: PASS (Code quality, module architecture, typing, and test execution).
-   - **Reviewer 2**: PASS (Interface contracts, network/DB isolation, and acceptance criteria).
-   - **Challenger 1 & 2**: PASS (Adversarial stress testing, edge-case remediation, multi-process config persistence).
-   - **Forensic Auditor**: **CLEAN** (Verified 0 hardcoded test results, 0 dummy facades, 0 cheated assertions).
-
----
-
-## 2. Verification Commands & Results
-
-```bash
-# 1. Compilation Verification
-python3 -m py_compile synth_arbitrage/*.py synth_arbitrage.py supabase_client.py
-# Result: Exit code 0 (All files compiled successfully)
-
-# 2. Pytest Execution
-venv/bin/pytest tests/ test_synth_arbitrage.py -v
-# Result: 127 passed in 0.50s (100% pass rate)
-
-# 3. Isolated Import & Functional Execution Test
-python3 -c "
-from synth_arbitrage import analyze_listing, extract_price, get_market_price, SupabaseDB
-assert extract_price('1.250,50 €') == 1250.5
-assert extract_price('-50 €') is None
-assert get_market_price('Korg Minilogue XD') == (400, 550)
-res = analyze_listing('Roland Juno-106 Synthesizer', 'Sehr guter Zustand', 1200.0, 'https://example.com/item/1')
-assert res['Modelo'] == 'Roland Juno-106' and res['Ahorro %'] == '42%'
-print('✅ Functional Isolation Test Passed')
-"
-# Result: Output "✅ Functional Isolation Test Passed"
-```
-
----
-
-## 3. Milestone Summary
-
-| Milestone | Scope | Status | Verification Verdict |
-|-----------|-------|--------|----------------------|
-| **M1** | Codebase Exploration & Refactoring Blueprint | DONE | 3 Explorers delivered complete blueprint |
-| **M2** | Backend Modularization & Type Hints | DONE | Worker 1 implemented `synth_arbitrage/` package + shims |
-| **M3** | Automated Unit Test Suite (`pytest`) | DONE | Worker 2 implemented 117 unit tests |
-| **M4** | Verification & Forensic Audit & Remediation | DONE | Reviewer 1 (PASS), Reviewer 2 (PASS), Auditor (CLEAN), Worker 3 (127 tests PASS) |
-
----
-
-## 4. Key Artifacts Location
-
-- Root executable: `/Users/dacritter/.gemini/antigravity/playground/pulsing-perseverance/synth_arbitrage.py`
-- Package directory: `/Users/dacritter/.gemini/antigravity/playground/pulsing-perseverance/synth_arbitrage/`
-- Test suite: `/Users/dacritter/.gemini/antigravity/playground/pulsing-perseverance/tests/`
-- Root test runner: `/Users/dacritter/.gemini/antigravity/playground/pulsing-perseverance/test_synth_arbitrage.py`
-- Metadata & Briefing: `/Users/dacritter/.gemini/antigravity/playground/pulsing-perseverance/.agents/orchestrator/`
+## Key Artifacts
+- `.agents/orchestrator/plan.md` — Milestone plan
+- `.agents/orchestrator/progress.md` — Progress log & heartbeat tracking
+- `.agents/orchestrator/PROJECT.md` — Project specification & status
+- `.agents/orchestrator/BRIEFING.md` — Orchestrator memory index
+- `.agents/teamwork_preview_auditor_m6_1/handoff.md` — Forensic Audit Report

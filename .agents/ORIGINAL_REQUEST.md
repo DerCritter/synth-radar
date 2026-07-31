@@ -58,3 +58,29 @@ En `index.html`, la función `fetchData()` debe separar los datos recibidos en d
 - [ ] La lógica de inyección garantiza matemáticamente que si hay anuncios B-Stock disponibles, estos se insertan intercalados (ej. en las posiciones 8, 16, 24 del grid).
 - [ ] El estilo CSS inyectado para los anuncios B-Stock es visualmente distinto (destacado) frente a las tarjetas de anuncios normales.
 
+## Follow-up — 2026-07-30T11:28:17Z
+
+The Python web scraper (Playwright + BeautifulSoup) for SynthRadar is hanging/freezing during execution, specifically after processing the brand "Simmons". It needs to be debugged and fixed so it can reliably scrape eBay, Kleinanzeigen, and Thomann B-Stock for synthesizers without deadlocking or crashing.
+
+Working directory: /Users/dacritter/.gemini/antigravity/playground/pulsing-perseverance
+Integrity mode: development
+
+## Requirements
+
+### R1. Fix Scraper Deadlocks
+Identify and resolve the root cause of the scraper freezing or failing after the "Simmons" brand. Ensure the asynchronous Playwright tasks (eBay, Kleinanzeigen, Thomann) run concurrently without blocking each other or exhausting browser contexts.
+
+### R2. Reliable Multi-Platform Scraping
+Ensure the scraper successfully extracts data from all three platforms (Kleinanzeigen, eBay, Thomann B-Stock) and processes them through the existing `analyze_listing` logic.
+
+### R3. Error Handling and Logging
+Implement robust `try/except` blocks and timeouts around page navigation and parsing so that if one platform or brand fails, the rest of the scraper continues to run and logs the specific error.
+
+## Acceptance Criteria
+
+### Scraper Reliability
+- [ ] Running `python3 diagnostic.py` completes fully without hanging indefinitely.
+- [ ] The logs show successful scraping attempts for Kleinanzeigen, eBay, and Thomann B-Stock.
+- [ ] No syntax errors or Playwright concurrency exceptions occur during a full run.
+
+

@@ -1,21 +1,24 @@
-# Progress — SynthRadar Backend & Thomann B-Stock Integration
+# Progress — Scraper Freeze & Deadlock Fix (SynthRadar)
 
 ## Current Status
-Last visited: 2026-07-29T21:55:02Z
+Last visited: 2026-07-30T13:51:00Z
 
 ## Iteration Status
 Current iteration: 2 / 32
 
 ## Checklist
-- [x] Initial context recovery & user request assessment (Follow-up)
+- [x] Initial context recovery & user request assessment (Follow-up: Scraper deadlock fix)
 - [x] Setup orchestrator metadata files (`plan.md`, `PROJECT.md`, `progress.md`, `BRIEFING.md`)
-- [x] M5.1: Exploration of `scraper.py`, `analysis.py`, `index.html`, and `tests/`
-- [x] M5.2: Implementation of Thomann B-Stock scraper, analysis tagging, frontend interleaving, and pytest updates
-- [ ] M5.3: Review, Challenger testing, and Forensic Integrity Audit (in progress)
+- [x] M6.1: Exploration of scraper deadlock after brand "Simmons" (DONE)
+- [x] M6.2: Implementation of scraper deadlock fix & concurrency hardening (DONE)
+- [x] M6.2 Remediation: Global timeout result harvesting & 1200s timeout extension (DONE - Worker 1 Remediation)
+- [x] M6.3: Multi-agent Review, Challenger stress testing & Forensic Integrity Audit (DONE - Reviewer 1 APPROVE, Reviewer 2 APPROVE, Challenger 1 PASS, Challenger 2 PASS, Forensic Auditor CLEAN)
 
 ## Log
-- 2026-07-29T21:52:00Z: Received Follow-up request for Thomann B-Stock integration. Updated plan, project specs, and progress tracking. Launched M5.1 Explorers.
-- 2026-07-29T21:53:00Z: M5.1 completed. Explorer 1 and Explorer 2 provided comprehensive handoff reports detailing scraper bug fixes, `Estado` mapping, `Ahorro %` safety, 1:8 grid interleaving, native ad CSS styling, and `pytest.ini` setup.
-- 2026-07-29T21:53:43Z: Launched Worker 1 (`9c03cc43-d912-4958-b35f-11a4c161bbeb`) to execute M5.2 implementation.
-- 2026-07-29T21:54:52Z: Worker 1 completed M5.2. Verified backend, scraper, index.html, style.css, and 128/128 pytest tests passing.
-- 2026-07-29T21:54:58Z: Launched Milestone M5.3 Verification Team: Reviewer 1 (Backend), Reviewer 2 (Frontend), Challenger 1 (Interleaving Math), Challenger 2 (Backend Edge Cases), Forensic Auditor (Integrity).
+- 2026-07-30T13:29:30Z: Received follow-up request to fix scraper hanging after brand "Simmons".
+- 2026-07-30T13:35:11Z: Worker 1 completed M6.2 implementation.
+- 2026-07-30T13:46:44Z: Reviewer 1 reported REQUEST_CHANGES regarding result harvesting on `asyncio.TimeoutError`.
+- 2026-07-30T13:47:00Z: Initiated Iteration 2 (Remediation). Dispatched Worker 1 for remediation.
+- 2026-07-30T13:50:18Z: Worker 1 completed remediation: `scrape_all_platforms` uses `asyncio.create_task`, default timeout=1200.0s, completed task result harvesting on `asyncio.TimeoutError`, frame detachment error protection. 151/151 tests passing.
+- 2026-07-30T13:50:52Z: Reviewer 1 re-evaluated and delivered final verdict **APPROVE**.
+- 2026-07-30T13:51:00Z: All milestones M6.1, M6.2, M6.3 complete and verified.

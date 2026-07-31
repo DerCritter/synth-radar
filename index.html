@@ -1,22 +1,22 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthRadar - Encuentra Chollos de Sintetizadores en Europa</title>
-    <meta name="description" content="Monitorizamos eBay y Kleinanzeigen para encontrar las mejores ofertas y chollos de sintetizadores en Europa.">
+    <title>SynthRadar - Find Synthesizer Deals in Europe</title>
+    <meta name="description" content="We monitor eBay and Kleinanzeigen to find the best synthesizer deals and bargains in Europe.">
     
     <!-- Open Graph -->
-    <meta property="og:title" content="SynthRadar - Encuentra Chollos de Sintetizadores en Europa">
-    <meta property="og:description" content="Monitorizamos eBay y Kleinanzeigen para encontrar las mejores ofertas y chollos de sintetizadores en Europa.">
+    <meta property="og:title" content="SynthRadar - Find Synthesizer Deals in Europe">
+    <meta property="og:description" content="We monitor eBay and Kleinanzeigen to find the best synthesizer deals and bargains in Europe.">
     <meta property="og:image" content="https://via.placeholder.com/1200x630.png?text=SynthRadar">
     <meta property="og:url" content="https://synthradar.com">
     <meta property="og:type" content="website">
     
     <!-- Twitter Cards -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="SynthRadar - Encuentra Chollos de Sintetizadores en Europa">
-    <meta name="twitter:description" content="Monitorizamos eBay y Kleinanzeigen para encontrar las mejores ofertas y chollos de sintetizadores en Europa.">
+    <meta name="twitter:title" content="SynthRadar - Find Synthesizer Deals in Europe">
+    <meta name="twitter:description" content="We monitor eBay and Kleinanzeigen to find the best synthesizer deals and bargains in Europe.">
     <meta name="twitter:image" content="https://via.placeholder.com/1200x630.png?text=SynthRadar">
 
     <!-- Google Analytics 4 (REPLACE 'G-XXXXXXXXXX' WITH YOUR ACTUAL GA4 MEASUREMENT ID) -->
@@ -30,8 +30,8 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=1.4">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css?v=5.0">
     <!-- Lucide for cool icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -41,8 +41,15 @@
     
     <div class="app-container">
         <aside class="sidebar">
-            
-            <div class="sidebar-header" style="margin-top: 2rem;">
+            <div class="sidebar-header">
+                <i data-lucide="info"></i>
+                <h2>About SynthRadar</h2>
+            </div>
+            <p class="sidebar-desc" style="margin-bottom: 2rem; color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6;">
+                An automated hub designed to spot arbitrage opportunities in the used synthesizer market. We compare live prices across platforms to find the best deals. Our scans run automatically multiple times a day.
+            </p>
+
+            <div class="sidebar-header">
                 <i data-lucide="search"></i>
                 <h2>Search</h2>
             </div>
@@ -133,7 +140,7 @@
                 <select id="price-sort" class="select-input">
                     <option value="price-asc" selected>Price: Low to High</option>
                     <option value="price-desc">Price: High to Low</option>
-                    <option value="save-desc">🔥 Mayor Ahorro (Hot Deals)</option>
+                    <option value="save-desc">🔥 Highest Savings (Hot Deals)</option>
                 </select>
             </div>
         
@@ -145,7 +152,7 @@
             <div class="ad-banner-slot" style="margin-top: 1rem; padding: 1rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; border: 1px dashed rgba(255, 255, 255, 0.2); text-align: center; color: #94a3b8; font-size: 0.85rem; cursor: pointer; transition: all 0.3s ease;">
                 <div style="margin-bottom: 0.5rem;"><i data-lucide="image" style="width: 24px; height: 24px; opacity: 0.5;"></i></div>
                 <strong>Ad Space</strong><br>
-                <span>Pega aquí tu código HTML de Thomann o Music Store</span>
+                <span>Paste your Thomann or Music Store HTML code here</span>
             </div>
 
         </aside>
@@ -184,6 +191,13 @@
                 <div class="metric-info">
                     <h3>Active Opportunities</h3>
                     <p id="total-opps">0</p>
+                </div>
+            </div>
+
+            <div class="aiwa-lcd-panel" id="aiwa-visualizer">
+                <div class="aiwa-title">BRAND SPECTRUM</div>
+                <div class="aiwa-spectrum" id="aiwa-spectrum-container">
+                    <!-- Bars injected by JS -->
                 </div>
             </div>
             <div class="metric-card">
@@ -376,7 +390,6 @@
             card.innerHTML = `
                 ${isNew ? '<div class="new-badge">NEW</div>' : ''}
                 ${isGreatDeal && !isBStock ? '<div class="great-deal-badge"><i data-lucide="flame"></i>HOT DEAL</div>' : ''}
-                <div class="platform-badge ${platformClass}"><i data-lucide="${platformIcon}"></i>${platform}</div>
                 ${hasImage ? `<div class="card-image-wrap">
                     <img class="card-image-bg" src="${opp.imagen}" alt="">
                     <img class="card-image" src="${opp.imagen}" alt="${opp.modelo}" onerror="this.parentElement.style.display='none'">
@@ -384,13 +397,18 @@
                 
                 <div class="card-header">
                     <div class="tags">
-                        <span class="tag ${stateClass}">${opp.estado}</span>
+                        <span class="tag ${stateClass}">${(opp.estado || '').replace('Funcional', 'Functional')}</span>
                         <span class="tag tag-save">${opp.ahorro_porcentaje} Off</span>
-                        <span class="tag tag-date"><i data-lucide="clock"></i> ${opp.fecha_agregado || 'Reciente'}</span>
+                        <span class="tag tag-date"><i data-lucide="clock"></i> ${opp.fecha_agregado || 'Recent'}</span>
                     </div>
                 </div>
                 
-                <h2 class="model-name">${opp.modelo}</h2>
+                <div class="model-row">
+                    <h2 class="model-name">${opp.modelo}</h2>
+                    <div class="platform-badge-inline ${platformClass}">
+                        <i data-lucide="${platformIcon}"></i>${platform}
+                    </div>
+                </div>
                 
                 <div class="price-row">
                     <div class="price-col">
@@ -642,6 +660,77 @@
                         const brandName = (o.modelo || 'Unknown').split(' ')[0];
                         brandCounts[brandName] = (brandCounts[brandName] || 0) + 1;
                     });
+                    
+                    // --- AIWA Visualizer Logic ---
+                    const aiwaContainer = document.getElementById('aiwa-spectrum-container');
+                    if (aiwaContainer) {
+                        aiwaContainer.innerHTML = '';
+                        
+                        // Get top 8 brands by count from CURRENTLY FILTERED opps
+                        const currentBrandCounts = {};
+                        opps.forEach(o => {
+                            const brandName = (o.modelo || 'Unknown').split(' ')[0];
+                            currentBrandCounts[brandName] = (currentBrandCounts[brandName] || 0) + 1;
+                        });
+                        
+                        const topBrands = Object.entries(currentBrandCounts)
+                            .sort((a, b) => b[1] - a[1])
+                            .slice(0, 10);
+                            
+                        let maxCount = topBrands.length > 0 ? topBrands[0][1] : 1;
+                        if (maxCount < 5) maxCount = 5; // minimum scale
+                        
+                        const MAX_SEGMENTS = 10;
+                        
+                        topBrands.forEach(([brand, count]) => {
+                            const targetSegments = Math.ceil((count / maxCount) * MAX_SEGMENTS);
+                            
+                            const wrapper = document.createElement('div');
+                            wrapper.className = 'aiwa-bar-wrapper';
+                            
+                            const bar = document.createElement('div');
+                            bar.className = 'aiwa-bar';
+                            bar.setAttribute('data-target', targetSegments);
+                            
+                            for (let i = 0; i < MAX_SEGMENTS; i++) {
+                                const segment = document.createElement('div');
+                                segment.className = 'aiwa-segment';
+                                bar.appendChild(segment);
+                            }
+                            
+                            const label = document.createElement('div');
+                            label.className = 'aiwa-label';
+                            label.textContent = brand; 
+                            
+                            wrapper.appendChild(bar);
+                            wrapper.appendChild(label);
+                            aiwaContainer.appendChild(wrapper);
+                        });
+                        
+                        // Animate the equalizer
+                        if (!window.aiwaInterval) {
+                            window.aiwaInterval = setInterval(() => {
+                                document.querySelectorAll('.aiwa-bar').forEach(bar => {
+                                    const target = parseInt(bar.getAttribute('data-target') || '0');
+                                    const segments = Array.from(bar.querySelectorAll('.aiwa-segment'));
+                                    
+                                    // Randomly fluctuate up to 2 segments below target, occasionally hitting target
+                                    const fluctuate = Math.random() > 0.3 ? Math.floor(Math.random() * 3) : 0;
+                                    const activeCount = Math.max(1, target - fluctuate);
+                                    
+                                    segments.forEach((seg, idx) => {
+                                        seg.className = 'aiwa-segment'; // reset
+                                        if (idx < activeCount) {
+                                            seg.classList.add('active');
+                                            if (idx >= MAX_SEGMENTS - 2) seg.classList.add('peak');
+                                            else if (idx >= MAX_SEGMENTS - 5) seg.classList.add('mid');
+                                        }
+                                    });
+                                });
+                            }, 100); // fast retro update rate
+                        }
+                    }
+                    // -----------------------------
                     
                     document.querySelectorAll('.filter-item').forEach(label => {
                         const cb = label.querySelector('.filter-cb');
