@@ -55,14 +55,13 @@ body::before {
 .sidebar {
     width: 300px;
     flex-shrink: 0;
-    background: var(--card-bg);
+    background: rgba(10, 10, 10, 0.5);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 1.75rem;
     height: fit-content;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
 }
 
 .sidebar-header {
@@ -80,17 +79,20 @@ body::before {
 
 .sidebar-header h2 {
     font-family: var(--font-heading);
-    font-size: 1.15rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .sidebar-desc {
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     margin-bottom: 1.5rem;
     padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--border-color);
+    line-height: 1.6;
 }
 
 .filter-actions {
@@ -140,9 +142,9 @@ body::before {
 }
 
 .filter-item:hover {
-    background: rgba(255,255,255,0.03);
-    border-color: var(--border-color);
-    transform: translateX(4px);
+    background: rgba(255,255,255,0.02);
+    border-color: rgba(255,255,255,0.05);
+    transform: translateX(2px);
 }
 
 .filter-cb {
@@ -163,9 +165,9 @@ body::before {
 }
 
 .filter-cb:checked ~ .checkbox-indicator {
-    background: var(--accent);
-    border-color: var(--accent);
-    box-shadow: 0 0 12px rgba(255,255,255, 0.1);
+    background: #6366f1;
+    border-color: #6366f1;
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.25);
 }
 
 .filter-cb:checked ~ .checkbox-indicator::after {
@@ -233,11 +235,11 @@ body::before {
 
 .progress-bar-fill {
     height: 100%;
-    background: var(--text-primary);
+    background: linear-gradient(90deg, #6366f1, #a855f7);
     width: 0%;
     border-radius: 4px;
     transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
 }
 
 /* Header */
@@ -245,7 +247,7 @@ body::before {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 3rem;
+    margin-bottom: 2.5rem;
     padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--border-color);
 }
@@ -265,16 +267,17 @@ body::before {
 
 .logo h1 {
     font-family: var(--font-heading);
-    font-size: 1.85rem;
+    font-size: 1.6rem;
     font-weight: 700;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.04em;
 }
 
 .subtitle {
     color: var(--text-secondary);
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     margin-top: 0.25rem;
     font-weight: 400;
+    letter-spacing: 0.5px;
 }
 
 .header-right {
@@ -329,22 +332,19 @@ body::before {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .metric-card:hover {
-    transform: translateY(-4px);
     border-color: var(--border-highlight);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
 }
 
 .metric-icon {
-    color: var(--accent);
+    color: #6366f1;
     width: 36px;
     height: 36px;
     padding: 8px;
-    background: rgba(56, 189, 248, 0.1);
-    border-radius: 12px;
+    background: rgba(99, 102, 241, 0.1);
+    border-radius: 10px;
 }
 
 .metric-info h3 {
@@ -387,9 +387,9 @@ body::before {
 }
 
 .opp-card:hover {
-    border-color: var(--border-highlight);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
-    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    transform: translateY(-3px);
 }
 
 /* Fixed Image Cropping - Premium Layout */
@@ -455,9 +455,9 @@ body::before {
     gap: 4px;
 }
 
-.state-defekt { color: var(--text-secondary); border: 1px solid var(--border-color); }
-.state-funcional { color: var(--text-primary); border: 1px solid var(--border-highlight); }
-.tag-save { background: var(--text-primary); color: var(--bg-color); border: 1px solid var(--text-primary); }
+.state-defekt { color: var(--text-secondary); border: 1px solid rgba(255,255,255,0.05); background: rgba(255,255,255,0.02); }
+.state-funcional { color: var(--text-primary); border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); }
+.tag-save { background: rgba(99, 102, 241, 0.9); color: #fff; border: none; }
 
 .tag-date { 
     background: rgba(255, 255, 255, 0.05); 
@@ -564,14 +564,14 @@ body::before {
 .btn:hover i { transform: scale(1.1); }
 
 .btn-primary {
-    background: var(--text-primary);
-    color: var(--bg-color);
+    background: #6366f1;
+    color: #fff;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
-    background: #e0e0e0;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+    background: #818cf8;
 }
 
 .btn-reverb {
@@ -599,11 +599,11 @@ body::before {
 }
 
 .btn-secondary.copied {
-    background: var(--success);
-    color: var(--bg-color);
-    border-color: var(--success);
+    background: #6366f1;
+    color: #fff;
+    border-color: #6366f1;
 }
-.btn-secondary.copied i { color: var(--bg-color); }
+.btn-secondary.copied i { color: #fff; }
 
 /* Empty State */
 .empty-state {
@@ -733,19 +733,19 @@ body::before {
 .range-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     border-radius: 50%;
-    background: var(--text-primary);
+    background: #6366f1;
     cursor: pointer;
     border: 2px solid var(--bg-color);
-    box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.4);
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .range-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.3);
-    background: var(--text-secondary);
+    transform: scale(1.2);
+    background: #818cf8;
 }
 
 .great-deal {
@@ -761,17 +761,17 @@ body::before {
     position: absolute;
     top: -12px;
     right: -12px;
-    background: var(--text-primary);
-    color: var(--bg-color);
+    background: rgba(99, 102, 241, 0.9);
+    color: #fff;
     padding: 6px 14px;
-    border-radius: 4px;
+    border-radius: 20px;
     font-family: var(--font-heading);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 600;
     display: flex;
     align-items: center;
     gap: 6px;
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
     z-index: 10;
 }
 
@@ -782,19 +782,20 @@ body::before {
 
 .new-badge {
     position: absolute;
-    top: -12px;
-    left: -12px;
-    background: var(--bg-color);
-    color: #ef4444;
+    top: -10px;
+    left: -10px;
+    background: #ef4444;
+    color: #fff;
     padding: 4px 10px;
-    border-radius: 4px;
-    border: 1px solid #ef4444;
+    border-radius: 20px;
+    border: none;
     font-family: var(--font-heading);
-    font-weight: 500;
-    font-size: 0.75rem;
+    font-weight: 600;
+    font-size: 0.65rem;
     letter-spacing: 0.05em;
     z-index: 10;
     transition: opacity 0.5s ease;
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4);
 }
 
 .platform-badge {
@@ -1071,6 +1072,17 @@ body::before {
 
 .aiwa-bar-wrapper:hover .aiwa-label {
     color: var(--text-primary);
+}
+
+/* Dimmed state for unchecked brands */
+.aiwa-bar-wrapper.dimmed {
+    opacity: 0.2;
+    filter: grayscale(1);
+    transition: all 0.3s ease;
+}
+.aiwa-bar-wrapper.dimmed:hover {
+    opacity: 0.5;
+    filter: grayscale(0.5);
 }
 
 .bstock-sponsor-badge {

@@ -689,6 +689,13 @@
                             
                             const wrapper = document.createElement('div');
                             wrapper.className = 'aiwa-bar-wrapper';
+                            wrapper.style.cursor = 'pointer';
+                            wrapper.setAttribute('data-brand', brand);
+                            
+                            // Check if this brand is currently active in sidebar
+                            const matchingCb = document.querySelector(`.filter-cb[data-model="${brand}"]`);
+                            const isActive = matchingCb ? matchingCb.checked : true;
+                            if (!isActive) wrapper.classList.add('dimmed');
                             
                             const bar = document.createElement('div');
                             bar.className = 'aiwa-bar';
@@ -707,6 +714,15 @@
                             const label = document.createElement('div');
                             label.className = 'aiwa-label';
                             label.textContent = brand; 
+                            
+                            // Click handler: toggle the sidebar checkbox for this brand
+                            wrapper.addEventListener('click', () => {
+                                const cb = document.querySelector(`.filter-cb[data-model="${brand}"]`);
+                                if (cb) {
+                                    cb.checked = !cb.checked;
+                                    cb.dispatchEvent(new Event('change', { bubbles: true }));
+                                }
+                            });
                             
                             wrapper.appendChild(bar);
                             wrapper.appendChild(label);
