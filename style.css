@@ -773,11 +773,11 @@ body::before {
     position: absolute;
     top: -10px;
     left: -10px;
-    background: #ef4444;
-    color: #fff;
+    background: var(--card-bg);
+    color: #ef4444;
     padding: 4px 10px;
     border-radius: 0;
-    border: none;
+    border: 1px solid #ef4444;
     font-family: var(--font-heading);
     font-weight: 600;
     font-size: 0.65rem;
