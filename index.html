@@ -374,7 +374,6 @@
             const affiliatePlatform = isBStock ? 'Thomann' : platform;
 
             card.innerHTML = `
-                ${isBStock ? '<div class="bstock-sponsor-badge"><i data-lucide="shield-check"></i> Thomann B-Stock</div>' : ''}
                 ${isNew ? '<div class="new-badge">NEW</div>' : ''}
                 ${isGreatDeal && !isBStock ? '<div class="great-deal-badge"><i data-lucide="flame"></i>HOT DEAL</div>' : ''}
                 <div class="platform-badge ${platformClass}"><i data-lucide="${platformIcon}"></i>${platform}</div>
@@ -400,7 +399,7 @@
                     </div>
                     <div class="price-vs"><i data-lucide="arrow-right"></i></div>
                     <div class="price-col">
-                        <span class="price-label">Reverb Market</span>
+                        <span class="price-label">${isBStock ? 'New Price' : 'Reverb Market'}</span>
                         <span class="price-value">${opp.precio_mercado}</span>
                     </div>
                 </div>
@@ -412,21 +411,12 @@
                     <a href="${getAffiliateUrl(opp.reverb || '#', 'Reverb')}" target="_blank" class="btn btn-reverb" title="See Reverb prices">
                         <i data-lucide="bar-chart-2"></i> Reverb
                     </a>
-                    <button class="btn btn-secondary copy-btn" data-draft="${encodeURIComponent(opp.mensaje_borrador || '')}">
-                        <i data-lucide="copy"></i> Draft
-                    </button>
                     <button class="btn btn-secondary share-btn" data-title="SynthRadar: ${opp.modelo}" data-url="${opp.url}">
                         <i data-lucide="share-2"></i> Share
                     </button>
                 </div>
             `;
             
-            // Attach listener specifically for this card's button
-            const copyBtn = card.querySelector('.copy-btn');
-            copyBtn.addEventListener('click', (e) => {
-                const draft = decodeURIComponent(e.currentTarget.getAttribute('data-draft'));
-                copyToClipboard(draft, copyBtn);
-            });
             
             const shareBtn = card.querySelector('.share-btn');
             shareBtn.addEventListener('click', async (e) => {
@@ -553,12 +543,31 @@
                     grid.innerHTML = ''; // Clear current
                     
                                         let opps = result || [];
+                    const allOpps = opps; // Save reference to all un-filtered opportunities for counting
 
                     // Initialize config with dynamic brands from data if first load
                     if (!currentConfig || Object.keys(currentConfig.brands || {}).length === 0) {
                         initConfigFromData(opps);
                     }
                     
+                    // Dynamically set profit slider min on first load
+                    if (!window.profitSliderInitialized && opps.length > 0) {
+                        let minDiscount = 100;
+                        opps.forEach(o => {
+                            const d = parseFloat(String(o.ahorro_porcentaje || '0').replace('%', ''));
+                            if (!isNaN(d) && d < minDiscount) minDiscount = d;
+                        });
+                        if (minDiscount < 100) {
+                            const profitSlider = document.getElementById('profit-slider');
+                            const profitDisplay = document.getElementById('min-profit-display');
+                            minDiscount = Math.floor(minDiscount);
+                            profitSlider.min = minDiscount;
+                            profitSlider.value = minDiscount;
+                            profitDisplay.textContent = minDiscount + '%';
+                            window.profitSliderInitialized = true;
+                        }
+                    }
+
                     // Get selected platforms
                     
                     // Filters
@@ -624,7 +633,6 @@
                         });
                     }
                     
-                    const allOpps = opps;
                     const bStockAds = opps.filter(o => (o.plataforma || '') === 'Thomann B-Stock');
                     opps = opps.filter(o => (o.plataforma || '') !== 'Thomann B-Stock');
                     

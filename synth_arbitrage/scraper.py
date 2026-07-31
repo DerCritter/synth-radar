@@ -271,13 +271,16 @@ async def _scrape_thomann_bstock_page(
             img_el = card.find("picture")
             img_url = ""
             if img_el:
-                source = img_el.find("source", type=lambda t: t != "image/webp")
-                if source and source.get("data-srcset"):
-                    img_url = source.get("data-srcset").split(",")[0].strip().split(" ")[0]
+                source = img_el.find("source") # Get first source, usually webp, which is fine
+                if source and (source.get("data-srcset") or source.get("srcset")):
+                    srcset = source.get("data-srcset") or source.get("srcset")
+                    img_url = srcset.split(",")[0].strip().split(" ")[0]
                 else:
                     img_src = img_el.find("img")
                     if img_src:
-                        img_url = img_src.get("data-src") or img_src.get("src")
+                        img_url = img_src.get("data-src")
+                        if not img_url:
+                            img_url = img_src.get("src")
 
             if img_url and not img_url.startswith("http"):
                 img_url = "https://www.thomann.de" + img_url
