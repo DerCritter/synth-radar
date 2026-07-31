@@ -47,7 +47,7 @@ CONDITION_POOR: List[str] = [
 CONDITION_IGNORE: List[str] = [
     "suche", "tausche", "leerkarton", "manual", "anleitung", "flightcase", "case", 
     "decksaver", "dustcover", "ständer", "stand", "kabel", "tasche", "bag",
-    "plugin", "software", "vst", "clone", "behringer", "buch", "handbuch",
+    "plugin", "software", "vst", "clone", "buch", "handbuch",
     "ramkarte", "netzteil", "ersatzteil", "spare", "part", "knöpfe", "tasten",
     "kappe", "stecker", "lader", "anreize", "ovp nur"
 ]
@@ -56,7 +56,9 @@ TARGET_BRANDS: List[str] = [
     "Roland", "Korg", "Yamaha", "Waldorf", "Kawai", "E-mu", "Akai", 
     "Ensoniq", "Oberheim", "Casio", "Alesis", "Sequential", "Moog", 
     "Nord", "Arturia", "Novation", "Elektron", "Access",
-    "Quasimidi", "Kurzweil", "Hohner", "Crumar", "Vermona", "Simmons"
+    "Quasimidi", "Kurzweil", "Hohner", "Crumar", "Vermona", "Simmons",
+    "Behringer", "Teenage Engineering", "Make Noise", "Doepfer",
+    "Erica Synths", "Intellijel", "Studio Electronics",
 ]
 
 # Estimated market value ranges in EUR/USD (low, high)
@@ -76,7 +78,7 @@ MARKET_VALUES: Dict[str, Tuple[int, int]] = {
     "Korg Volca FM": (100, 140), "Korg Volca FM2": (120, 160), "Korg Volca Keys": (90, 130), "Korg Volca Bass": (90, 130),
     "Korg Volca Sample": (85, 125), "Korg Volca Beats": (80, 120), "Korg Volca Nubass": (110, 150),
     "Korg Volca Drum": (100, 140), "Korg Volca Modular": (120, 160), "Korg Volca Kick": (100, 140), "Korg Volca Mix": (80, 120), 
-    "Korg Microkorg": (220, 300), "Korg Minilogue": (350, 450), "Korg Electribe ESX-1": (550, 750), "Korg Electribe 2": (220, 300),
+    "Korg Microkorg": (220, 300), "Korg Electribe ESX-1": (550, 750), "Korg Electribe 2": (220, 300),
     "Korg Minilogue XD": (400, 550), "Korg Monologue": (200, 250), "Korg Drumlogue": (380, 480), "Korg Modwave": (400, 550),
     "Korg Wavestate": (400, 550), "Korg Prologue": (850, 1100), "Korg NTS-1": (70, 110),
 
@@ -129,7 +131,33 @@ MARKET_VALUES: Dict[str, Tuple[int, int]] = {
     "Alesis Andromeda A6": (4000, 5000), "Alesis HR-16": (180, 220), "Alesis SR-16": (100, 140), "Alesis Quadrasynth": (180, 220),
 
     # SEQUENTIAL / DSI
-    "Sequential Prophet": (3000, 3400), "Sequential Drumtraks": (1300, 1700), "Sequential Take 5": (900, 1100)
+    "Sequential Prophet": (3000, 3400), "Sequential Drumtraks": (1300, 1700), "Sequential Take 5": (900, 1100),
+
+    # BEHRINGER
+    "Behringer TD-3": (90, 130), "Behringer Pro-800": (280, 380), "Behringer DeepMind 12": (450, 600),
+    "Behringer DeepMind 6": (350, 450), "Behringer Model D": (200, 280), "Behringer Neutron": (200, 280),
+    "Behringer Crave": (130, 180), "Behringer RD-8": (250, 350), "Behringer RD-9": (280, 380),
+    "Behringer Poly D": (500, 650), "Behringer MS-1": (180, 250), "Behringer Odyssey": (350, 450),
+    "Behringer Pro-1": (180, 250), "Behringer K-2": (200, 280), "Behringer 2600": (400, 550),
+    "Behringer MonoPoly": (280, 380), "Behringer Cat": (200, 280), "Behringer UB-Xa": (900, 1200),
+    "Behringer Wasp": (180, 250), "Behringer Edge": (130, 180),
+
+    # TEENAGE ENGINEERING
+    "Teenage Engineering OP-1": (900, 1200), "Teenage Engineering OP-Z": (400, 550),
+    "Teenage Engineering OP-1 Field": (1600, 2000), "Teenage Engineering Pocket Operator": (40, 80),
+    "Teenage Engineering EP-133": (220, 300), "Teenage Engineering TX-6": (350, 450),
+
+    # MAKE NOISE
+    "Make Noise 0-Coast": (400, 550), "Make Noise Strega": (500, 650),
+
+    # DOEPFER
+    "Doepfer Dark Energy": (350, 450),
+
+    # ERICA SYNTHS
+    "Erica Synths Syntrx": (1200, 1500), "Erica Synths DB-01": (350, 450),
+
+    # STUDIO ELECTRONICS
+    "Studio Electronics Boomstar": (800, 1100),
 }
 
 

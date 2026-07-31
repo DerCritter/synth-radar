@@ -201,7 +201,9 @@ def analyze_listing(
 
         if source == "Thomann B-Stock":
             condition_label = "B-Stock / Oficial"
-            discount_str = "0%"
+            # Calculate real savings vs new price (market_high approximates retail)
+            bstock_discount = (market_high - price) / market_high if market_high > 0 else 0
+            discount_str = f"{int(bstock_discount * 100)}%" if bstock_discount > 0 else "0%"
         else:
             condition_label = "Funcional (Average)"
             if is_defekt:

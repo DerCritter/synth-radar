@@ -213,32 +213,26 @@ async def scrape_ebay_brand(
     return results
 
 
-async def scrape_thomann_bstock(
-    browser: Any,
-    stealth_async: Any
+async def _scrape_thomann_bstock_page(
+    page: Any,
+    url: str,
+    category_label: str,
+    seen_links: Set[str],
 ) -> List[Dict[str, Any]]:
-    """Scrapes Thomann B-Stock deals section for target synth equipment.
+    """Scrapes a single Thomann B-Stock category page.
 
     Args:
-        browser: Playwright Browser instance.
-        stealth_async: Playwright stealth helper function.
+        page: Playwright Page instance.
+        url: Full URL to the Thomann B-Stock category page.
+        category_label: Human-readable category label for logging.
+        seen_links: Set of already-seen product URLs to prevent duplicates.
 
     Returns:
-        List of qualifying Thomann B-Stock opportunity dicts.
+        List of qualifying opportunity dicts from this page.
     """
-    logging.info("--- Iniciando escaneo de Thomann B-Stock (Stealth) ---")
     results: List[Dict[str, Any]] = []
-    context = None
-    page = None
 
     try:
-        context = await browser.new_context(viewport={"width": 1280, "height": 800}, locale="de-DE")
-        page = await context.new_page()
-        if stealth_async:
-            await stealth_async(page)
-
-        url = "https://www.thomann.de/de/blowouts_GF_synthesizer.html"
-
         await asyncio.sleep(random.uniform(2.0, 5.0))
         await page.goto(url, wait_until="domcontentloaded", timeout=30000)
         await asyncio.sleep(random.uniform(3.0, 6.0))
@@ -251,7 +245,7 @@ async def scrape_thomann_bstock(
         soup = BeautifulSoup(content, "html.parser")
         cards = soup.find_all("a", class_=lambda c: c and "fx-product-box" in c)
 
-        logging.info(f"[Thomann B-Stock] Encontrados {len(cards)} anuncios.")
+        logging.info(f"[Thomann B-Stock / {category_label}] Encontrados {len(cards)} anuncios.")
 
         for card in cards:
             title_el = card.find("div", class_="description")
@@ -267,6 +261,9 @@ async def scrape_thomann_bstock(
             link = card.get("href")
             if link:
                 link = urljoin("https://www.thomann.de/de/", link)
+
+            if link and link in seen_links:
+                continue
 
             price_str = price_el.text.strip()
             price = extract_price(price_str)
@@ -285,16 +282,61 @@ async def scrape_thomann_bstock(
             if img_url and not img_url.startswith("http"):
                 img_url = "https://www.thomann.de" + img_url
 
-            brand_match = False
-            for b in TARGET_BRANDS:
-                if b.lower() in title.lower():
-                    brand_match = True
-                    break
+            # Let analyze_listing handle model matching via MARKET_VALUES keys
+            # (no redundant brand pre-filter needed)
+            analysis = analyze_listing(title, "B-Stock from Thomann", price, link, img_url, source="Thomann B-Stock")
+            if analysis:
+                if link:
+                    seen_links.add(link)
+                results.append(analysis)
 
-            if brand_match:
-                analysis = analyze_listing(title, "B-Stock from Thomann", price, link, img_url, source="Thomann B-Stock")
-                if analysis:
-                    results.append(analysis)
+    except Exception as e:
+        logging.error(f"Error en Thomann B-Stock / {category_label}: {e}")
+
+    return results
+
+
+async def scrape_thomann_bstock(
+    browser: Any,
+    stealth_async: Any
+) -> List[Dict[str, Any]]:
+    """Scrapes multiple Thomann B-Stock category pages for target synth equipment.
+
+    Covers synthesizers, drum machines, grooveboxes, and samplers.
+
+    Args:
+        browser: Playwright Browser instance.
+        stealth_async: Playwright stealth helper function.
+
+    Returns:
+        List of qualifying Thomann B-Stock opportunity dicts.
+    """
+    logging.info("--- Iniciando escaneo de Thomann B-Stock (Stealth) ---")
+    results: List[Dict[str, Any]] = []
+    context = None
+    page = None
+
+    # Multiple Thomann B-Stock category URLs
+    thomann_categories = [
+        ("https://www.thomann.de/de/blowouts_GF_synthesizer.html", "Synthesizer"),
+        ("https://www.thomann.de/de/blowouts_GF_drum_machines.html", "Drum Machines"),
+        ("https://www.thomann.de/de/blowouts_GF_grooveboxen.html", "Grooveboxes"),
+        ("https://www.thomann.de/de/blowouts_GF_sampler.html", "Samplers"),
+    ]
+
+    seen_links: Set[str] = set()
+
+    try:
+        context = await browser.new_context(viewport={"width": 1280, "height": 800}, locale="de-DE")
+        page = await context.new_page()
+        if stealth_async:
+            await stealth_async(page)
+
+        for category_url, category_label in thomann_categories:
+            category_results = await _scrape_thomann_bstock_page(
+                page, category_url, category_label, seen_links
+            )
+            results.extend(category_results)
 
     except Exception as e:
         logging.error(f"Error en Thomann B-Stock: {e}")
