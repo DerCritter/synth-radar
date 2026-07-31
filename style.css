@@ -1116,7 +1116,7 @@ body::before {
     position: relative;
 }
 .ad-card::before {
-    content: 'DESTACADO';
+    content: 'SPONSORED';
     position: absolute;
     top: -10px;
     right: -10px;
@@ -1140,7 +1140,7 @@ body::before {
     position: relative;
 }
 .ad-card::before {
-    content: 'DESTACADO';
+    content: 'SPONSORED';
     position: absolute;
     top: -10px;
     right: -10px;
@@ -1151,4 +1151,66 @@ body::before {
     border-radius: 4px;
     font-size: 0.75rem;
     z-index: 11;
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS
+   ========================================================================== */
+
+@media (max-width: 1024px) {
+    .app-container {
+        flex-direction: column;
+        padding: 0 1rem;
+        gap: 1.5rem;
+    }
+
+    .sidebar {
+        width: 100%;
+        max-width: 100%;
+        position: static;
+        height: auto;
+    }
+
+    .main-content {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .header-right {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .top-metrics-row {
+        grid-template-columns: 1fr;
+    }
+
+    .visualizer-section {
+        padding: 1.5rem;
+        overflow-x: auto; /* Allow scrolling if bars don't fit */
+    }
+
+    .aiwa-spectrum {
+        min-width: 600px; /* Ensure bars don't get too squished */
+    }
+}
+
+@media (max-width: 640px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .metric-card {
+        padding: 1.25rem;
+    }
+    
+    .card-actions {
+        flex-direction: column;
+    }
 }

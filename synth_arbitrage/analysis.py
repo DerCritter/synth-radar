@@ -186,9 +186,9 @@ def analyze_listing(
     if source == "Thomann B-Stock":
         opportunity = "Thomann B-Stock Deal"
     elif is_defekt and discount >= 0.40:
-        opportunity = "Gran Margen Defecto"
+        opportunity = "High Margin Defective"
     elif not is_defekt and discount >= 0.20:
-        opportunity = "Buen Precio Funcional"
+        opportunity = "Good Price Functional"
 
     if opportunity:
         is_accessory = any(
@@ -200,18 +200,18 @@ def analyze_listing(
             return None
 
         if source == "Thomann B-Stock":
-            condition_label = "B-Stock / Oficial"
+            condition_label = "B-Stock / Official"
             # Calculate real savings vs new price (market_high approximates retail)
             bstock_discount = (market_high - price) / market_high if market_high > 0 else 0
             discount_str = f"{int(bstock_discount * 100)}%" if bstock_discount > 0 else "0%"
         else:
-            condition_label = "Funcional (Average)"
+            condition_label = "Functional (Average)"
             if is_defekt:
-                condition_label = "Defekt/Bastler"
+                condition_label = "Defect/Parts"
             elif is_mint:
-                condition_label = "Funcional (Mint)"
+                condition_label = "Functional (Mint)"
             elif is_poor:
-                condition_label = "Funcional (Gebrauchsspuren)"
+                condition_label = "Functional (Poor)"
 
             discount_str = f"{int(discount * 100)}%"
 
