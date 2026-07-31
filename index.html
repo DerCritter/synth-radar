@@ -669,17 +669,11 @@
                     if (aiwaContainer) {
                         aiwaContainer.innerHTML = '';
                         
-                        // Get brands by count from CURRENTLY FILTERED opps (first word = brand)
-                        const currentBrandCounts = {};
-                        opps.forEach(o => {
-                            const brandName = (o.modelo || 'Unknown').split(' ')[0];
-                            currentBrandCounts[brandName] = (currentBrandCounts[brandName] || 0) + 1;
-                        });
-                        
-                        const topBrands = Object.entries(currentBrandCounts)
+                        // Use brandCounts (which includes all data) so bars don't disappear when filtered out
+                        const topBrands = Object.entries(brandCounts)
                             .sort((a, b) => a[0].localeCompare(b[0]));
                             
-                        let maxCount = topBrands.length > 0 ? topBrands[0][1] : 1;
+                        let maxCount = topBrands.length > 0 ? Math.max(...topBrands.map(b => b[1])) : 1;
                         if (maxCount < 5) maxCount = 5; // minimum scale
                         
                         const MAX_SEGMENTS = 10;
