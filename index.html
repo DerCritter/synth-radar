@@ -669,16 +669,15 @@
                     if (aiwaContainer) {
                         aiwaContainer.innerHTML = '';
                         
-                        // Get top 8 brands by count from CURRENTLY FILTERED opps
+                        // Get brands by count from CURRENTLY FILTERED opps (first word = brand)
                         const currentBrandCounts = {};
                         opps.forEach(o => {
-                            const brandName = o.modelo || 'Unknown';
+                            const brandName = (o.modelo || 'Unknown').split(' ')[0];
                             currentBrandCounts[brandName] = (currentBrandCounts[brandName] || 0) + 1;
                         });
                         
                         const topBrands = Object.entries(currentBrandCounts)
-                            .sort((a, b) => b[1] - a[1])
-                            .slice(0, 10);
+                            .sort((a, b) => a[0].localeCompare(b[0]));
                             
                         let maxCount = topBrands.length > 0 ? topBrands[0][1] : 1;
                         if (maxCount < 5) maxCount = 5; // minimum scale
