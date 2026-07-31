@@ -669,7 +669,7 @@
                         // Get top 8 brands by count from CURRENTLY FILTERED opps
                         const currentBrandCounts = {};
                         opps.forEach(o => {
-                            const brandName = (o.modelo || 'Unknown').split(' ')[0];
+                            const brandName = o.modelo || 'Unknown';
                             currentBrandCounts[brandName] = (currentBrandCounts[brandName] || 0) + 1;
                         });
                         
@@ -683,18 +683,22 @@
                         const MAX_SEGMENTS = 10;
                         
                         topBrands.forEach(([brand, count]) => {
-                            const targetSegments = Math.ceil((count / maxCount) * MAX_SEGMENTS);
+                            const targetSegments = Math.max(1, Math.ceil((count / maxCount) * MAX_SEGMENTS));
                             
                             const wrapper = document.createElement('div');
                             wrapper.className = 'aiwa-bar-wrapper';
                             
                             const bar = document.createElement('div');
                             bar.className = 'aiwa-bar';
-                            bar.setAttribute('data-target', targetSegments);
                             
                             for (let i = 0; i < MAX_SEGMENTS; i++) {
                                 const segment = document.createElement('div');
                                 segment.className = 'aiwa-segment';
+                                if (i < targetSegments) {
+                                    segment.classList.add('active');
+                                    if (i >= MAX_SEGMENTS - 2) segment.classList.add('peak');
+                                    else if (i >= MAX_SEGMENTS - 5) segment.classList.add('mid');
+                                }
                                 bar.appendChild(segment);
                             }
                             
@@ -706,29 +710,6 @@
                             wrapper.appendChild(label);
                             aiwaContainer.appendChild(wrapper);
                         });
-                        
-                        // Animate the equalizer
-                        if (!window.aiwaInterval) {
-                            window.aiwaInterval = setInterval(() => {
-                                document.querySelectorAll('.aiwa-bar').forEach(bar => {
-                                    const target = parseInt(bar.getAttribute('data-target') || '0');
-                                    const segments = Array.from(bar.querySelectorAll('.aiwa-segment'));
-                                    
-                                    // Randomly fluctuate up to 2 segments below target, occasionally hitting target
-                                    const fluctuate = Math.random() > 0.3 ? Math.floor(Math.random() * 3) : 0;
-                                    const activeCount = Math.max(1, target - fluctuate);
-                                    
-                                    segments.forEach((seg, idx) => {
-                                        seg.className = 'aiwa-segment'; // reset
-                                        if (idx < activeCount) {
-                                            seg.classList.add('active');
-                                            if (idx >= MAX_SEGMENTS - 2) seg.classList.add('peak');
-                                            else if (idx >= MAX_SEGMENTS - 5) seg.classList.add('mid');
-                                        }
-                                    });
-                                });
-                            }, 100); // fast retro update rate
-                        }
                     }
                     // -----------------------------
                     

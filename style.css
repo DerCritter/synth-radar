@@ -1045,9 +1045,9 @@ body::before {
     color: var(--text-primary);
     background: transparent;
     border: 1px solid var(--border-highlight);
-    padding: 3px 6px;
+    padding: 6px 3px;
     border-radius: 4px;
-    font-size: 0.6rem;
+    font-size: 0.65rem;
     text-transform: uppercase;
     text-align: center;
     letter-spacing: 0.5px;
@@ -1055,16 +1055,20 @@ body::before {
     white-space: nowrap;
     position: relative;
     font-family: var(--font-body);
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    max-height: 120px; /* give it space to grow down */
+    margin-top: 10px; /* space between bar and label */
 }
 
 /* Simulate the line connecting blocks in a synth diagram */
 .aiwa-label::before {
     content: '';
     position: absolute;
-    top: -9px;
+    bottom: -10px; /* changed from top because it's rotated 180deg */
     left: 50%;
     width: 1px;
-    height: 8px;
+    height: 10px;
     background: var(--border-highlight);
     transform: translateX(-50%);
 }
