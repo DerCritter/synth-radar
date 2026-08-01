@@ -322,11 +322,16 @@
     });
 
     // Fetch live data
-    fetch('/data.json')
+    fetch('https://wnoiyxgdbemamajebqom.supabase.co/rest/v1/listings?select=modelo,estado,precio,precio_mercado,ahorro_porcentaje,plataforma,url,imagen,reverb,mensaje_borrador,last_seen,fecha_agregado&limit=3000', {
+        headers: {
+            'apikey': 'sb_publishable_VCnH38uDOJvfet7bJHRnAw_9VZaDSmp',
+            'Authorization': 'Bearer sb_publishable_VCnH38uDOJvfet7bJHRnAw_9VZaDSmp'
+        }
+    })
         .then(r => r.json())
         .then(data => {
             // Normalize keys from Spanish capitals to lowercase
-            const opps = (data.opportunities || []).map(o => ({
+            const opps = (Array.isArray(data) ? data : data.opportunities || []).map(o => ({
                 modelo: o['Modelo'] || o.modelo || '',
                 estado: o['Estado'] || o.estado || '',
                 precio: o['Precio URL'] || o.precio || '',
@@ -337,6 +342,7 @@
                 imagen: o['Imagen'] || o.imagen || '',
                 reverb: o['Reverb'] || o.reverb || '',
             }));
+
 
             // Hero stats
             document.getElementById('stat-opps').textContent = opps.length;
