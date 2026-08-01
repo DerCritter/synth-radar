@@ -862,6 +862,13 @@
         document.getElementById('select-all-btn').addEventListener('click', () => updateAllFilters(true));
         document.getElementById('clear-all-btn').addEventListener('click', () => updateAllFilters(false));
 
+        // Check URL for search parameter (e.g. from landing page clicks)
+        const urlParams = new URLSearchParams(window.location.search);
+        const searchParam = urlParams.get('search');
+        if (searchParam) {
+            document.getElementById('text-search').value = searchParam;
+        }
+
         // Initial load and auto-refresh intervals
         fetchData();
         setInterval(fetchData, 45000); // 45s for opportunities
