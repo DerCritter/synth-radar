@@ -689,7 +689,7 @@
                         
                         const MAX_SEGMENTS = 10;
                         
-                        topBrands.forEach(([brand, count]) => {
+                        topBrands.forEach(([brand, count], brandIndex) => {
                             const targetSegments = Math.max(1, Math.ceil((count / maxCount) * MAX_SEGMENTS));
                             
                             const wrapper = document.createElement('div');
@@ -712,6 +712,10 @@
                                     segment.classList.add('active');
                                     if (i >= MAX_SEGMENTS - 2) segment.classList.add('peak');
                                     else if (i >= MAX_SEGMENTS - 5) segment.classList.add('mid');
+                                    
+                                    // AIWA Boot Animation Delay (column index * 0.05 + segment from bottom * 0.02)
+                                    const delay = (brandIndex * 0.05) + ((MAX_SEGMENTS - i) * 0.03);
+                                    segment.style.animation = `aiwaBoot 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s both`;
                                 }
                                 bar.appendChild(segment);
                             }
@@ -720,12 +724,25 @@
                             label.className = 'aiwa-label';
                             label.textContent = brand; 
                             
-                            // Click handler: toggle the sidebar checkbox for this brand
-                            wrapper.addEventListener('click', () => {
-                                const cb = document.querySelector(`.filter-cb[data-model="${brand}"]`);
-                                if (cb) {
-                                    cb.checked = !cb.checked;
-                                    cb.dispatchEvent(new Event('change', { bubbles: true }));
+                            // Click handler: select ONLY this brand, hide all others
+                            wrapper.addEventListener('click', async () => {
+                                Object.keys(currentConfig.brands).forEach(k => {
+                                    currentConfig.brands[k] = (k === brand);
+                                });
+                                
+                                document.querySelectorAll('.filter-cb[data-model]').forEach(cb => {
+                                    cb.checked = (cb.getAttribute('data-model') === brand);
+                                });
+                                
+                                try {
+                                    await fetch('/api/config', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify(currentConfig)
+                                    });
+                                    fetchData();
+                                } catch(err) {
+                                    console.error('Failed to save config', err);
                                 }
                             });
                             

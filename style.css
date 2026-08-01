@@ -1093,6 +1093,12 @@ body::before {
     text-transform: uppercase;
 }
 
+@keyframes aiwaBoot {
+    0% { transform: scaleY(0.1); opacity: 0; }
+    50% { transform: scaleY(1.2); opacity: 1; }
+    100% { transform: scaleY(1); opacity: 1; }
+}
+
 .aiwa-spectrum {
     display: flex;
     gap: 0;
