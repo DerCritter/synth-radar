@@ -562,13 +562,14 @@ body {
 .live-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1px;
-    background: var(--border);
+    gap: 24px;
+    background: transparent;
     margin-bottom: 3rem;
 }
 
 .live-card {
     background: var(--bg);
+    border: 1px solid var(--border);
     overflow: hidden;
     opacity: 0;
     transform: translateY(30px);
