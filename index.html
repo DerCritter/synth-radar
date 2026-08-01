@@ -727,14 +727,21 @@
                             label.className = 'aiwa-label';
                             label.textContent = brand; 
                             
-                            // Click handler: select ONLY this brand, hide all others
+                            // Click handler: toggle exclusive select vs all select
                             wrapper.addEventListener('click', async () => {
+                                const activeBrands = Object.keys(currentConfig.brands).filter(k => currentConfig.brands[k]);
+                                const isOnlyThisActive = activeBrands.length === 1 && activeBrands[0] === brand;
+
                                 Object.keys(currentConfig.brands).forEach(k => {
-                                    currentConfig.brands[k] = (k === brand);
+                                    if (isOnlyThisActive) {
+                                        currentConfig.brands[k] = true; // Turn all back on
+                                    } else {
+                                        currentConfig.brands[k] = (k === brand); // Exclusive select
+                                    }
                                 });
                                 
                                 document.querySelectorAll('.filter-cb[data-model]').forEach(cb => {
-                                    cb.checked = (cb.getAttribute('data-model') === brand);
+                                    cb.checked = currentConfig.brands[cb.getAttribute('data-model')];
                                 });
                                 
                                 try {
