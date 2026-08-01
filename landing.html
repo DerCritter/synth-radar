@@ -377,8 +377,8 @@
                 const reverb = o.precio_mercado || '—';
                 return `
                 <a href="./index.html" class="live-card" style="text-decoration: none; color: inherit; display: flex; flex-direction: column;">
-                    <div class="live-card-img" style="position: relative; overflow: hidden; background: #111;">
-                        <img src="${img}" alt="${o.modelo}" style="width: 100%; height: 100%; object-fit: contain; position: relative; z-index: 1;" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'300\\' style=\\'background:%23050505\\'><text x=\\'50%\\' y=\\'50%\\' fill=\\'%23ef4444\\' font-family=\\'monospace\\' font-size=\\'20\\' text-anchor=\\'middle\\' dominant-baseline=\\'middle\\'>NO IMAGE</text></svg>';">
+                    <div class="live-card-img" style="position: relative; overflow: hidden; background: #050505;">
+                        <img src="${img}" alt="${o.modelo}" style="width: 100%; height: 100%; object-fit: cover; position: relative; z-index: 1;" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'300\\' style=\\'background:%23050505\\'><text x=\\'50%\\' y=\\'50%\\' fill=\\'%23ef4444\\' font-family=\\'monospace\\' font-size=\\'20\\' text-anchor=\\'middle\\' dominant-baseline=\\'middle\\'>NO IMAGE</text></svg>';">
                     </div>
                     <div class="live-card-body">
                         <div class="live-card-tags">
