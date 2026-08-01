@@ -867,11 +867,11 @@ body::before {
 
 .great-deal-badge {
     position: absolute;
-    top: -12px;
-    right: -12px;
+    top: 0;
+    right: 0;
     background: var(--text-primary);
     color: var(--bg-color);
-    padding: 6px 14px;
+    padding: 4px 10px;
     border-radius: 0;
     font-family: var(--font-heading);
     font-size: 0.7rem;
@@ -890,8 +890,8 @@ body::before {
 
 .new-badge {
     position: absolute;
-    top: -10px;
-    left: -10px;
+    top: 0;
+    left: 0;
     background: var(--card-bg);
     color: #ef4444;
     padding: 4px 10px;
@@ -1039,9 +1039,9 @@ body::before {
     height: 14px;
 }
 
-.badge-kleinanzeigen { color: #84cc16; border-color: rgba(132, 204, 22, 0.3); background: rgba(132, 204, 22, 0.05); }
-.badge-ebay { color: #3b82f6; border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.05); }
-.badge-thomann { color: #06b6d4; border-color: rgba(6, 182, 212, 0.3); background: rgba(6, 182, 212, 0.05); }
+.badge-kleinanzeigen { color: var(--text-secondary); border-color: var(--border-color); background: transparent; }
+.badge-ebay { color: var(--text-secondary); border-color: var(--border-color); background: transparent; }
+.badge-thomann { color: var(--text-secondary); border-color: var(--border-color); background: transparent; }
 
 .bstock-s.platform-badge {
     position: absolute;
@@ -1212,21 +1212,21 @@ body::before {
 }
 
 .state-bstock {
-    background: rgba(20, 184, 166, 0.15);
-    color: #2dd4bf;
-    border: 1px solid rgba(20, 184, 166, 0.3);
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
 }
 
 .btn-thomann {
-    background: linear-gradient(135deg, #0d9488, #14b8a6);
-    color: #ffffff;
-    font-weight: 600;
+    background: transparent;
+    color: var(--text-primary);
+    font-weight: 500;
+    border: 1px solid var(--border-highlight);
 }
 
 .btn-thomann:hover {
-    background: linear-gradient(135deg, #14b8a6, #2dd4bf);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(13, 148, 136, 0.3);
+    background: var(--text-primary);
+    color: var(--bg-color);
 }
 
 
@@ -1234,23 +1234,26 @@ body::before {
 
 /* Sponsored Ad Card for B-Stock */
 .ad-card {
-    border: 2px solid #ffd700;
-    background: rgba(255,215,0,0.03);
+    border: none;
+    background: transparent;
     z-index: 10;
     position: relative;
 }
 .ad-card::before {
     content: 'SPONSORED';
     position: absolute;
-    top: -10px;
-    right: -10px;
-    background: #ffd700;
-    color: #000;
-    font-weight: bold;
-    padding: 2px 8px;
-    border-radius: 0;
-    font-size: 0.75rem;
-    z-index: 11;
+    top: 0;
+    right: 0;
+    background: var(--bg-color);
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding: 4px 10px;
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-right: none;
+    z-index: 20;
 }
 
 /* ==========================================================================
