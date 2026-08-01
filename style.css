@@ -22,6 +22,21 @@
     box-sizing: border-box;
 }
 
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-color);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border-highlight);
+    border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
 /* ═══════════════════════════════════════════════════════
    NAV
    ═══════════════════════════════════════════════════════ */
@@ -278,8 +293,8 @@ body::before {
 .checkbox-indicator {
     width: 18px;
     height: 18px;
-    border: 1.5px solid var(--border-highlight);
-    border-radius: 6px;
+    border: 1px solid var(--border-highlight);
+    border-radius: 0;
     position: relative;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -291,7 +306,7 @@ body::before {
 .filter-cb:checked ~ .checkbox-indicator {
     background: var(--text-primary);
     border-color: var(--text-primary);
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+    box-shadow: none;
 }
 
 .filter-cb:checked ~ .checkbox-indicator::after {
@@ -893,10 +908,10 @@ body::before {
     top: 0;
     left: 0;
     background: var(--card-bg);
-    color: #ef4444;
+    color: #22c55e;
     padding: 4px 10px;
     border-radius: 0;
-    border: 1px solid #ef4444;
+    border: 1px solid rgba(34, 197, 94, 0.3);
     font-family: var(--font-heading);
     font-weight: 600;
     font-size: 0.65rem;
@@ -1235,22 +1250,24 @@ body::before {
 /* Sponsored Ad Card for B-Stock */
 .ad-card {
     border: none;
-    background: transparent;
+    background: linear-gradient(180deg, rgba(234,179,8,0.03) 0%, transparent 100%);
+    box-shadow: inset 0 1px 0 rgba(234,179,8,0.15);
     z-index: 10;
     position: relative;
+    margin: -1px; /* Bleed into the grid slightly */
 }
 .ad-card::before {
     content: 'SPONSORED';
     position: absolute;
     top: 0;
     right: 0;
-    background: var(--bg-color);
-    color: var(--text-secondary);
+    background: transparent;
+    color: #eab308;
     font-weight: 600;
     padding: 4px 10px;
     font-size: 0.65rem;
     letter-spacing: 0.05em;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(234,179,8,0.2);
     border-top: none;
     border-right: none;
     z-index: 20;
