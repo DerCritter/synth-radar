@@ -36,6 +36,33 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
+<!-- ═══════════════════════════════════════════════════════ 
+     NAV
+     ═══════════════════════════════════════════════════════ -->
+<nav class="nav">
+    <div class="nav-inner">
+        <a href="/" class="nav-logo">
+            <span class="logo-mark">∿</span>
+            <span class="logo-text">SynthRadar</span>
+        </a>
+        <div class="nav-links">
+            <div class="stat-badge">
+                <span class="pulse-dot"></span>
+                <span id="last-update" style="font-size: 0.75rem; color: var(--fg-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Waiting for data...</span>
+            </div>
+            <a href="./landing.html" class="nav-link">About</a>
+        </div>
+        <button class="nav-menu-btn" id="menu-toggle" aria-label="Menu">
+            <span></span><span></span>
+        </button>
+    </div>
+</nav>
+
+<!-- Mobile menu overlay -->
+<div class="mobile-menu" id="mobile-menu">
+    <a href="./landing.html" class="mobile-link">About</a>
+</div>
+
     <div class="glow-bg glow-bg-1"></div>
     <div class="glow-bg glow-bg-2"></div>
     
@@ -158,22 +185,6 @@
         </aside>
 
         <main class="dashboard">
-        <header class="header">
-            <div class="header-left">
-                <div class="logo">
-                    <i data-lucide="activity"></i>
-                    <h1>SynthRadar</h1>
-                </div>
-                <p class="subtitle">Arbitrage Opportunities Hub</p>
-            </div>
-            
-            <div class="header-right">
-                <div class="stat-badge">
-                    <span class="pulse-dot"></span>
-                    <span id="last-update">Waiting for data...</span>
-                </div>
-            </div>
-        </header>
 
         <div class="progress-container" id="bot-progress-container" style="display: none;">
             <div class="progress-info">
@@ -212,7 +223,7 @@
             </div>
         </section>
 
-        <section class="opportunities-grid" id="grid">
+        <section class="grid-container" id="grid">
             <!-- Skeleton cards shown on load -->
             <div class="skeleton-card">
                 <div class="skeleton-img"></div>
@@ -395,7 +406,7 @@
                 ${isGreatDeal && !isBStock ? '<div class="great-deal-badge"><i data-lucide="flame"></i>HOT DEAL</div>' : ''}
                 ${hasImage ? `<div class="card-image-wrap">
                     <img class="card-image-bg" src="${opp.imagen}" alt="">
-                    <img class="card-image" src="${opp.imagen}" alt="${opp.modelo}" onerror="this.parentElement.style.display='none'">
+                    <img class="card-image" src="${opp.imagen}" alt="${opp.modelo}" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'400\\' height=\\'300\\' style=\\'background:%23111\\'><text x=\\'50%\\' y=\\'50%\\' fill=\\'%23ef4444\\' font-family=\\'monospace\\' font-size=\\'20\\' text-anchor=\\'middle\\' dominant-baseline=\\'middle\\'>NO IMAGE</text></svg>'; this.previousElementSibling.style.display='none';">
                 </div>` : ''}
                 
                 <div class="card-header">
