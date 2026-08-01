@@ -703,7 +703,20 @@
                             // Check if this brand is currently active in sidebar
                             const matchingCb = document.querySelector(`.filter-cb[data-model="${brand}"]`);
                             const isActive = matchingCb ? matchingCb.checked : true;
-                            if (!isActive) wrapper.classList.add('dimmed');
+                            
+                            // Check previous state for animation
+                            const wasActive = window.previousBrandsState ? window.previousBrandsState[brand] !== false : true;
+                            
+                            if (!isActive) {
+                                if (wasActive) {
+                                    // Turning OFF smoothly
+                                    wrapper.style.transition = 'all 0.5s ease';
+                                    setTimeout(() => wrapper.classList.add('dimmed'), 10);
+                                } else {
+                                    // Stay OFF
+                                    wrapper.classList.add('dimmed');
+                                }
+                            }
                             
                             const bar = document.createElement('div');
                             bar.className = 'aiwa-bar';
@@ -715,14 +728,29 @@
                                     segment.classList.add('active');
                                     if (i >= MAX_SEGMENTS - 2) segment.classList.add('peak');
                                     else if (i >= MAX_SEGMENTS - 5) segment.classList.add('mid');
+                                    
                                     if (isActive) {
-                                        // Turn ON: Bottom (i=0) to Top (i=9)
-                                        const delay = (brandIndex * 0.05) + (i * 0.03);
-                                        segment.style.animation = `aiwaBoot 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s both`;
+                                        if (!wasActive || !window.previousBrandsState) {
+                                            // Turn ON: Bottom (i=0) to Top (i=9)
+                                            const delay = (brandIndex * 0.05) + (i * 0.03);
+                                            segment.style.animation = `aiwaBoot 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${delay}s both`;
+                                        } else {
+                                            // Stay ON: Intact
+                                            segment.style.animation = 'none';
+                                            segment.style.transform = 'scaleY(1)';
+                                            segment.style.opacity = '1';
+                                        }
                                     } else {
-                                        // Turn OFF: Top (i=9) to Bottom (i=0)
-                                        const delay = (brandIndex * 0.05) + ((MAX_SEGMENTS - i) * 0.03);
-                                        segment.style.animation = `aiwaShutdown 0.5s ease-in ${delay}s both`;
+                                        if (wasActive) {
+                                            // Turn OFF: Top (i=9) to Bottom (i=0)
+                                            const delay = (brandIndex * 0.05) + ((MAX_SEGMENTS - i) * 0.03);
+                                            segment.style.animation = `aiwaShutdown 0.5s ease-in ${delay}s both`;
+                                        } else {
+                                            // Stay OFF: Intact (hidden)
+                                            segment.style.animation = 'none';
+                                            segment.style.transform = 'scaleY(0.1)';
+                                            segment.style.opacity = '0';
+                                        }
                                     }
                                 }
                                 bar.appendChild(segment);
@@ -734,6 +762,8 @@
                             
                             // Click handler: toggle exclusive select vs all select
                             wrapper.addEventListener('click', async () => {
+                                window.previousBrandsState = { ...currentConfig.brands }; // Save state for animations
+                                
                                 const activeBrands = Object.keys(currentConfig.brands).filter(k => currentConfig.brands[k]);
                                 const isOnlyThisActive = activeBrands.length === 1 && activeBrands[0] === brand;
 
